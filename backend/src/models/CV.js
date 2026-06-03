@@ -13,6 +13,7 @@ const educationSchema = new mongoose.Schema(
     qualification: { type: String, trim: true },
     program:       { type: String, trim: true },
     description:   { type: String, trim: true },
+    gpa:           { type: String, trim: true },
     subjects:      [subjectSchema],
   },
   { _id: false }

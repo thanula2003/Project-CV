@@ -70,6 +70,7 @@ function newInstitute() {
   return {
     id: Date.now() + Math.random(),
     institute: "", qualification: "", program: "", description: "",
+    gpa: "", showGpa: false,  // ← both
     subjects: [], open: true, showSubjects: false, showDescription: false,
   };
 }
@@ -195,6 +196,34 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
             )}
           </div>
 
+          {/* Optional GPA */}
+            <div style={{ marginTop: 20 }}>
+              <button
+                type="button"
+                className="btn-ghost"
+                style={{
+                  background: inst.showGpa ? "var(--accent-bg)" : "",
+                  borderColor: inst.showGpa ? "var(--accent)" : "",
+                  color: inst.showGpa ? "var(--accent)" : "",
+                }}
+                onClick={() => onUpdate({ ...inst, showGpa: !inst.showGpa })}
+              >
+                {inst.showGpa ? <><MinusIcon /> Hide GPA</> : <><PlusIcon /> Add GPA</>}
+              </button>
+              {inst.showGpa && (
+                <div className="field" style={{ marginTop: 14, maxWidth: 200 }}>
+                  <label>GPA / Score</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 3.8 / 4.0 or 72%"
+                    value={inst.gpa}
+                    onChange={(e) => set("gpa", e.target.value)}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              )}
+            </div>
+
           {/* Optional Subjects */}
           <div style={{ marginTop: 14 }}>
             <button
@@ -304,7 +333,7 @@ function Education() {
     setSaving(true);
     setError("");
     try {
-      const payload = institutes.map(({ id: _id, open, showSubjects, showDescription, ...rest }) => ({
+      const payload = institutes.map(({ id: _id, open, showSubjects, showDescription, showGpa, ...rest }) => ({
         ...rest,
         subjects: rest.subjects.map(({ id: _sid, ...s }) => s),
       }));

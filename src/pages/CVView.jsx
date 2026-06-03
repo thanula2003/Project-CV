@@ -458,6 +458,11 @@ function CVDocument({ cv, template }) {
               {edu.description && (
                 <div style={{ fontSize: 10.5, opacity: 0.75, marginTop: 4 }}>{edu.description}</div>
               )}
+              {edu.gpa && (
+                <div style={{ fontSize: 10.5, color: s.wrap.color, opacity: 0.75, marginTop: 2 }}>
+                  GPA: <span style={{ fontWeight: 600, opacity: 1 }}>{edu.gpa}</span>
+                </div>
+              )}
               {edu.subjects?.length > 0 && (
                 <div style={{ marginTop: 6 }}>
                   <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 10 }}>

@@ -53,7 +53,7 @@ function Summary() {
   const [generated, setGenerated] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
-  const MAX_CHARS = 600;
+  const MAX_CHARS = 1000;
 
   const handleGenerate = async () => {
     const id = getCVId();
