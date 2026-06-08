@@ -11,12 +11,12 @@ const DownloadIcon = () => (
   </svg>
 );
 const EditIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const LockIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+  <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
     <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.6"/>
     <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
   </svg>
@@ -48,29 +48,25 @@ const GithubIcon = () => (
     <path d="M6.5 1a5.5 5.5 0 00-1.74 10.72c.28.05.38-.12.38-.26v-.9c-1.53.33-1.85-.74-1.85-.74-.25-.64-.62-.8-.62-.8-.5-.35.04-.34.04-.34.56.04.85.57.85.57.5.85 1.3.6 1.62.46.05-.36.2-.6.36-.74-1.22-.14-2.5-.61-2.5-2.73 0-.6.22-1.1.57-1.48-.06-.14-.25-.7.05-1.46 0 0 .47-.15 1.52.57a5.3 5.3 0 012.76 0c1.06-.72 1.52-.57 1.52-.57.3.76.11 1.32.05 1.46.36.39.57.88.57 1.48 0 2.13-1.3 2.6-2.53 2.73.2.17.37.51.37 1.03v1.52c0 .15.1.32.38.27A5.5 5.5 0 006.5 1z" fill="currentColor" />
   </svg>
 );
-const StarIcon = ({ filled, half }) => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+const StarIcon = ({ filled }) => (
+  <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
     <path
       d="M10 1.5l2.47 5.01 5.53.8-4 3.9.94 5.49L10 14.27l-4.94 2.43.94-5.49-4-3.9 5.53-.8L10 1.5z"
-      fill={filled ? "#f59e0b" : half ? "url(#half)" : "none"}
-      stroke={filled || half ? "#f59e0b" : "#d1d5db"}
-      strokeWidth="1.4"
-      strokeLinejoin="round"
+      fill={filled ? "#f59e0b" : "none"}
+      stroke={filled ? "#f59e0b" : "#d1d5db"}
+      strokeWidth="1.4" strokeLinejoin="round"
     />
-    {half && (
-      <defs>
-        <linearGradient id="half">
-          <stop offset="50%" stopColor="#f59e0b" />
-          <stop offset="50%" stopColor="transparent" />
-        </linearGradient>
-      </defs>
-    )}
   </svg>
 );
 const CheckCircleIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
     <circle cx="24" cy="24" r="22" fill="#d1fae5" stroke="#10b981" strokeWidth="2"/>
     <path d="M14 24l7 7 13-14" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+const ChevronIcon = ({ open }) => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+    <path d="M3 5.5l4.5 4.5L12 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -86,249 +82,73 @@ function formatDateRange(exp) {
   if (start && end) return `${start} – ${end}`;
   return start || end || "";
 }
+function formatProjectDateRange(proj) {
+  const start = formatDate(proj.startMonth, proj.startYear);
+  const end = proj.isOngoing ? "Ongoing" : formatDate(proj.endMonth, proj.endYear);
+  if (start && end) return `${start} – ${end}`;
+  return start || end || "";
+}
 
-// ── A4 dimensions at 96 dpi ────────────────────────────────────
 const A4_W = 794;
 const A4_H = 1123;
 
-// ── Template style definitions ─────────────────────────────────
+// ── Template style definitions (unchanged) ─────────────────────
 const TEMPLATE_STYLES = {
   classic: {
-    wrap: {
-      fontFamily: "'Georgia', 'Times New Roman', serif",
-      fontSize: 11,
-      lineHeight: 1.6,
-      color: "#2d2926",
-      background: "#fff",
-      padding: "40px 48px",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    header: {
-      textAlign: "center",
-      marginBottom: 22,
-      paddingBottom: 18,
-      borderBottom: "2.5px solid #1a1714",
-    },
-    name: {
-      fontFamily: "'Georgia', serif",
-      fontSize: 26,
-      fontWeight: 700,
-      color: "#1a1714",
-      margin: "0 0 6px",
-      letterSpacing: 0.5,
-    },
-    contactRow: {
-      display: "flex", flexWrap: "wrap", justifyContent: "center",
-      gap: "5px 18px", fontSize: 10, color: "#4a4540", marginTop: 8,
-    },
-    sectionHeading: {
-      fontSize: 10.5,
-      fontWeight: 700,
-      letterSpacing: "0.12em",
-      textTransform: "uppercase",
-      color: "#1a1714",
-      borderBottom: "2px solid #1a1714",
-      paddingBottom: 5,
-      marginBottom: 14,
-      marginTop: 0,
-      fontFamily: "'Georgia', serif",
-    },
+    wrap: { fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: 11, lineHeight: 1.6, color: "#2d2926", background: "#fff", padding: "40px 48px", width: "100%", boxSizing: "border-box" },
+    header: { textAlign: "center", marginBottom: 22, paddingBottom: 18, borderBottom: "2.5px solid #1a1714" },
+    name: { fontFamily: "'Georgia', serif", fontSize: 26, fontWeight: 700, color: "#1a1714", margin: "0 0 6px", letterSpacing: 0.5 },
+    contactRow: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "5px 18px", fontSize: 10, color: "#4a4540", marginTop: 8 },
+    sectionHeading: { fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#1a1714", borderBottom: "2px solid #1a1714", paddingBottom: 5, marginBottom: 14, marginTop: 0, fontFamily: "'Georgia', serif" },
     jobTitle: { fontWeight: 700, fontSize: 12, color: "#1a1714" },
-    company:  { fontSize: 11, color: "#4a4540", marginTop: 1 },
-    dateRange:{ fontSize: 10, color: "#6b6560", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
-    skillChip: {
-      fontSize: 10,
-      background: "#f4f3ec",
-      border: "1px solid #e2ddd6",
-      borderRadius: 3,
-      padding: "3px 9px",
-      color: "#2d2926",
-    },
-    photo: {
-      width: 80, height: 80, borderRadius: "50%",
-      border: "2px solid #1a1714",
-      objectFit: "cover", flexShrink: 0,
-    },
+    company: { fontSize: 11, color: "#4a4540", marginTop: 1 },
+    dateRange: { fontSize: 10, color: "#6b6560", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
+    skillChip: { fontSize: 10, background: "#f4f3ec", border: "1px solid #e2ddd6", borderRadius: 3, padding: "3px 9px", color: "#2d2926" },
+    photo: { width: 80, height: 80, borderRadius: "50%", border: "2px solid #1a1714", objectFit: "cover", flexShrink: 0 },
   },
-
   modern: {
-    wrap: {
-      fontFamily: "'Helvetica Neue', 'Arial', sans-serif",
-      fontSize: 11,
-      lineHeight: 1.6,
-      color: "#1e293b",
-      background: "#fff",
-      padding: "40px 48px",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    header: {
-      textAlign: "left",
-      marginBottom: 24,
-      paddingBottom: 16,
-      borderBottom: "3px solid #2563eb",
-    },
-    name: {
-      fontFamily: "'Helvetica Neue', Arial, sans-serif",
-      fontSize: 28,
-      fontWeight: 800,
-      color: "#0f172a",
-      margin: "0 0 4px",
-      letterSpacing: -0.5,
-    },
-    contactRow: {
-      display: "flex", flexWrap: "wrap", justifyContent: "flex-start",
-      gap: "5px 18px", fontSize: 10, color: "#475569", marginTop: 8,
-    },
-    sectionHeading: {
-      fontSize: 10,
-      fontWeight: 800,
-      letterSpacing: "0.14em",
-      textTransform: "uppercase",
-      color: "#2563eb",
-      borderBottom: "1.5px solid #e2e8f0",
-      paddingBottom: 5,
-      marginBottom: 14,
-      marginTop: 0,
-    },
+    wrap: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif", fontSize: 11, lineHeight: 1.6, color: "#1e293b", background: "#fff", padding: "40px 48px", width: "100%", boxSizing: "border-box" },
+    header: { textAlign: "left", marginBottom: 24, paddingBottom: 16, borderBottom: "3px solid #2563eb" },
+    name: { fontFamily: "'Helvetica Neue', Arial, sans-serif", fontSize: 28, fontWeight: 800, color: "#0f172a", margin: "0 0 4px", letterSpacing: -0.5 },
+    contactRow: { display: "flex", flexWrap: "wrap", justifyContent: "flex-start", gap: "5px 18px", fontSize: 10, color: "#475569", marginTop: 8 },
+    sectionHeading: { fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#2563eb", borderBottom: "1.5px solid #e2e8f0", paddingBottom: 5, marginBottom: 14, marginTop: 0 },
     jobTitle: { fontWeight: 700, fontSize: 12, color: "#0f172a" },
-    company:  { fontSize: 11, color: "#475569", marginTop: 1 },
-    dateRange:{ fontSize: 10, color: "#64748b", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
-    skillChip: {
-      fontSize: 10,
-      background: "#eff6ff",
-      border: "1px solid #bfdbfe",
-      borderRadius: 4,
-      padding: "3px 9px",
-      color: "#1e40af",
-    },
-    photo: {
-      width: 80, height: 80, borderRadius: 6,
-      border: "2px solid #2563eb",
-      objectFit: "cover", flexShrink: 0,
-    },
+    company: { fontSize: 11, color: "#475569", marginTop: 1 },
+    dateRange: { fontSize: 10, color: "#64748b", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
+    skillChip: { fontSize: 10, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 4, padding: "3px 9px", color: "#1e40af" },
+    photo: { width: 80, height: 80, borderRadius: 6, border: "2px solid #2563eb", objectFit: "cover", flexShrink: 0 },
   },
-
   minimal: {
-    wrap: {
-      fontFamily: "'Helvetica Neue', 'Arial', sans-serif",
-      fontSize: 11,
-      lineHeight: 1.7,
-      color: "#333",
-      background: "#fff",
-      padding: "44px 52px",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    header: {
-      textAlign: "left",
-      marginBottom: 28,
-      paddingBottom: 20,
-      borderBottom: "1px solid #ccc",
-    },
-    name: {
-      fontFamily: "'Helvetica Neue', Arial, sans-serif",
-      fontSize: 30,
-      fontWeight: 300,
-      color: "#111",
-      margin: "0 0 6px",
-      letterSpacing: 1.5,
-    },
-    contactRow: {
-      display: "flex", flexWrap: "wrap", justifyContent: "flex-start",
-      gap: "5px 20px", fontSize: 10, color: "#777", marginTop: 8,
-    },
-    sectionHeading: {
-      fontSize: 9,
-      fontWeight: 600,
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      color: "#999",
-      borderBottom: "1px solid #e5e5e5",
-      paddingBottom: 5,
-      marginBottom: 14,
-      marginTop: 0,
-    },
+    wrap: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif", fontSize: 11, lineHeight: 1.7, color: "#333", background: "#fff", padding: "44px 52px", width: "100%", boxSizing: "border-box" },
+    header: { textAlign: "left", marginBottom: 28, paddingBottom: 20, borderBottom: "1px solid #ccc" },
+    name: { fontFamily: "'Helvetica Neue', Arial, sans-serif", fontSize: 30, fontWeight: 300, color: "#111", margin: "0 0 6px", letterSpacing: 1.5 },
+    contactRow: { display: "flex", flexWrap: "wrap", justifyContent: "flex-start", gap: "5px 20px", fontSize: 10, color: "#777", marginTop: 8 },
+    sectionHeading: { fontSize: 9, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", borderBottom: "1px solid #e5e5e5", paddingBottom: 5, marginBottom: 14, marginTop: 0 },
     jobTitle: { fontWeight: 600, fontSize: 11.5, color: "#111" },
-    company:  { fontSize: 11, color: "#666", marginTop: 1 },
-    dateRange:{ fontSize: 10, color: "#999", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
-    skillChip: {
-      fontSize: 10,
-      background: "transparent",
-      border: "1px solid #ddd",
-      borderRadius: 2,
-      padding: "2px 8px",
-      color: "#555",
-    },
-    photo: {
-      width: 76, height: 76, borderRadius: "50%",
-      border: "1px solid #ccc",
-      objectFit: "cover", flexShrink: 0,
-    },
+    company: { fontSize: 11, color: "#666", marginTop: 1 },
+    dateRange: { fontSize: 10, color: "#999", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
+    skillChip: { fontSize: 10, background: "transparent", border: "1px solid #ddd", borderRadius: 2, padding: "2px 8px", color: "#555" },
+    photo: { width: 76, height: 76, borderRadius: "50%", border: "1px solid #ccc", objectFit: "cover", flexShrink: 0 },
   },
-
   executive: {
-    wrap: {
-      fontFamily: "'Georgia', 'Times New Roman', serif",
-      fontSize: 11,
-      lineHeight: 1.6,
-      color: "#1a1209",
-      background: "#fff",
-      padding: "40px 48px",
-      width: "100%",
-      boxSizing: "border-box",
-    },
-    header: {
-      textAlign: "center",
-      marginBottom: 22,
-      paddingBottom: 16,
-      borderBottom: "none",
-    },
-    name: {
-      fontFamily: "'Georgia', serif",
-      fontSize: 27,
-      fontWeight: 700,
-      color: "#0f1f40",
-      margin: "0 0 5px",
-      letterSpacing: 2,
-      textTransform: "uppercase",
-    },
-    contactRow: {
-      display: "flex", flexWrap: "wrap", justifyContent: "center",
-      gap: "5px 18px", fontSize: 10, color: "#4a4030", marginTop: 8,
-    },
-    sectionHeading: {
-      fontSize: 10,
-      fontWeight: 700,
-      letterSpacing: "0.15em",
-      textTransform: "uppercase",
-      color: "#0f1f40",
-      borderBottom: "none",
-      paddingBottom: 0,
-      marginBottom: 14,
-      marginTop: 0,
-      boxShadow: "0 2px 0 #b8960c",
-      display: "inline-block",
-      paddingRight: 8,
-    },
+    wrap: { fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: 11, lineHeight: 1.6, color: "#1a1209", background: "#fff", padding: "40px 48px", width: "100%", boxSizing: "border-box" },
+    header: { textAlign: "center", marginBottom: 22, paddingBottom: 16, borderBottom: "none" },
+    name: { fontFamily: "'Georgia', serif", fontSize: 27, fontWeight: 700, color: "#0f1f40", margin: "0 0 5px", letterSpacing: 2, textTransform: "uppercase" },
+    contactRow: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "5px 18px", fontSize: 10, color: "#4a4030", marginTop: 8 },
+    sectionHeading: { fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#0f1f40", borderBottom: "none", paddingBottom: 0, marginBottom: 14, marginTop: 0, boxShadow: "0 2px 0 #b8960c", display: "inline-block", paddingRight: 8 },
     jobTitle: { fontWeight: 700, fontSize: 12, color: "#0f1f40" },
-    company:  { fontSize: 11, color: "#4a4030", marginTop: 1 },
-    dateRange:{ fontSize: 10, color: "#6b5a30", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
-    skillChip: {
-      fontSize: 10,
-      background: "#fdfaf2",
-      border: "1px solid #d4b854",
-      borderRadius: 2,
-      padding: "3px 9px",
-      color: "#3a2e10",
-    },
-    photo: {
-      width: 82, height: 82, borderRadius: "50%",
-      border: "2px solid #b8960c",
-      objectFit: "cover", flexShrink: 0,
-    },
+    company: { fontSize: 11, color: "#4a4030", marginTop: 1 },
+    dateRange: { fontSize: 10, color: "#6b5a30", whiteSpace: "nowrap", marginLeft: 12, marginTop: 2 },
+    skillChip: { fontSize: 10, background: "#fdfaf2", border: "1px solid #d4b854", borderRadius: 2, padding: "3px 9px", color: "#3a2e10" },
+    photo: { width: 82, height: 82, borderRadius: "50%", border: "2px solid #b8960c", objectFit: "cover", flexShrink: 0 },
   },
+};
+
+const TEMPLATE_META = {
+  classic:   { label: "Classic",   accent: "#1a1714", badge: "Most Popular" },
+  modern:    { label: "Modern",    accent: "#2563eb", badge: "ATS Friendly" },
+  minimal:   { label: "Minimal",   accent: "#555",    badge: null },
+  executive: { label: "Executive", accent: "#b8960c", badge: "Premium" },
 };
 
 // ── CV Document ────────────────────────────────────────────────
@@ -339,55 +159,27 @@ function CVDocument({ cv, template }) {
   const isCentred = template === "classic" || template === "executive";
   const hasPhoto = !!cv.photo;
 
+  const contactItems = [
+    p.email    && <span key="email"    style={{ display: "flex", alignItems: "center", gap: 4 }}><EmailIcon />{p.email}</span>,
+    ...(p.phones?.filter(Boolean).map((ph, i) => <span key={`ph${i}`} style={{ display: "flex", alignItems: "center", gap: 4 }}><PhoneIcon />{ph}</span>) || []),
+    p.address  && <span key="addr"     style={{ display: "flex", alignItems: "center", gap: 4 }}><LocationIcon />{p.address}</span>,
+    p.linkedIn && <span key="li"       style={{ display: "flex", alignItems: "center", gap: 4 }}><LinkedInIcon />linkedin.com/in/{p.linkedIn}</span>,
+    p.github   && <span key="gh"       style={{ display: "flex", alignItems: "center", gap: 4 }}><GithubIcon />github.com/{p.github}</span>,
+  ].filter(Boolean);
+
   const headerInner = isCentred ? (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {hasPhoto && (
-        <img src={cv.photo} alt="Profile" style={{ ...s.photo, marginBottom: 14 }} />
-      )}
+      {hasPhoto && <img src={cv.photo} alt="Profile" style={{ ...s.photo, marginBottom: 14 }} />}
       <h1 style={s.name}>{p.fullName || "Your Name"}</h1>
-      {p.jobTitle && (
-        <div style={{
-          fontSize: 12,
-          color: template === "executive" ? "#b8960c" : "#666",
-          marginBottom: 4,
-          letterSpacing: template === "executive" ? 1 : 0,
-        }}>
-          {p.jobTitle}
-        </div>
-      )}
-      <div style={s.contactRow}>
-        {p.email    && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><EmailIcon /> {p.email}</span>}
-        {p.phones?.filter(Boolean).map((ph, i) => (
-          <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}><PhoneIcon /> {ph}</span>
-        ))}
-        {p.address  && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><LocationIcon /> {p.address}</span>}
-        {p.linkedIn && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><LinkedInIcon /> linkedin.com/in/{p.linkedIn}</span>}
-        {p.github   && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><GithubIcon /> github.com/{p.github}</span>}
-      </div>
+      {p.jobTitle && <div style={{ fontSize: 12, color: template === "executive" ? "#b8960c" : "#666", marginBottom: 4, letterSpacing: template === "executive" ? 1 : 0 }}>{p.jobTitle}</div>}
+      <div style={s.contactRow}>{contactItems}</div>
     </div>
   ) : (
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20 }}>
       <div style={{ flex: 1 }}>
         <h1 style={s.name}>{p.fullName || "Your Name"}</h1>
-        {p.jobTitle && (
-          <div style={{
-            fontSize: 12,
-            color: template === "modern" ? "#2563eb" : "#666",
-            fontWeight: template === "modern" ? 700 : 400,
-            marginBottom: 4,
-          }}>
-            {p.jobTitle}
-          </div>
-        )}
-        <div style={s.contactRow}>
-          {p.email    && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><EmailIcon /> {p.email}</span>}
-          {p.phones?.filter(Boolean).map((ph, i) => (
-            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}><PhoneIcon /> {ph}</span>
-          ))}
-          {p.address  && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><LocationIcon /> {p.address}</span>}
-          {p.linkedIn && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><LinkedInIcon /> linkedin.com/in/{p.linkedIn}</span>}
-          {p.github   && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><GithubIcon /> github.com/{p.github}</span>}
-        </div>
+        {p.jobTitle && <div style={{ fontSize: 12, color: template === "modern" ? "#2563eb" : "#666", fontWeight: template === "modern" ? 700 : 400, marginBottom: 4 }}>{p.jobTitle}</div>}
+        <div style={s.contactRow}>{contactItems}</div>
       </div>
       {hasPhoto && <img src={cv.photo} alt="Profile" style={s.photo} />}
     </div>
@@ -396,22 +188,16 @@ function CVDocument({ cv, template }) {
   return (
     <div style={s.wrap}>
       <div style={s.header}>
-        {isExecutive && (
-          <div style={{ borderTop: "3px solid #b8960c", borderBottom: "1px solid #b8960c", height: 4, marginBottom: 14 }} />
-        )}
+        {isExecutive && <div style={{ borderTop: "3px solid #b8960c", borderBottom: "1px solid #b8960c", height: 4, marginBottom: 14 }} />}
         {headerInner}
-        {isExecutive && (
-          <div style={{ borderTop: "1px solid #b8960c", borderBottom: "3px solid #b8960c", height: 4, marginTop: 14 }} />
-        )}
+        {isExecutive && <div style={{ borderTop: "1px solid #b8960c", borderBottom: "3px solid #b8960c", height: 4, marginTop: 14 }} />}
       </div>
-
       {cv.summary && (
         <section style={{ marginBottom: 22 }}>
           <h2 style={s.sectionHeading}>Professional Summary</h2>
           <p style={{ margin: 0, fontSize: 11, lineHeight: 1.7, color: s.wrap.color }}>{cv.summary}</p>
         </section>
       )}
-
       {cv.experience?.length > 0 && (
         <section style={{ marginBottom: 22 }}>
           <h2 style={s.sectionHeading}>Work Experience</h2>
@@ -420,26 +206,66 @@ function CVDocument({ cv, template }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={s.jobTitle}>{exp.position}</div>
-                  <div style={s.company}>
-                    {exp.company}
-                    {exp.employmentType && <span style={{ opacity: 0.7 }}> · {exp.employmentType}</span>}
-                    {exp.location && <span style={{ opacity: 0.7 }}> · {exp.location}</span>}
-                  </div>
+                  <div style={s.company}>{exp.company}{exp.employmentType && <span style={{ opacity: 0.7 }}> · {exp.employmentType}</span>}{exp.location && <span style={{ opacity: 0.7 }}> · {exp.location}</span>}</div>
                 </div>
                 <div style={s.dateRange}>{formatDateRange(exp)}</div>
               </div>
               {exp.description && (
                 <div style={{ marginTop: 5, fontSize: 10.5, lineHeight: 1.65, opacity: 0.85 }}>
-                  {exp.description.split("\n").map((line, j) => (
-                    <div key={j} style={{ marginBottom: 2 }}>{line}</div>
-                  ))}
+                  {exp.description.split("\n").map((line, j) => <div key={j} style={{ marginBottom: 2 }}>{line}</div>)}
                 </div>
               )}
             </div>
           ))}
         </section>
       )}
-
+      {cv.projects?.length > 0 && (
+        <section style={{ marginBottom: 22 }}>
+          <h2 style={s.sectionHeading}>Projects</h2>
+          {cv.projects.map((proj, i) => (
+            <div key={i} style={{ marginBottom: i < cv.projects.length - 1 ? 16 : 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={s.jobTitle}>{proj.title}</div>
+                  <div style={s.company}>
+                    {proj.projectType && <span>{proj.projectType}</span>}
+                    {proj.projectType && proj.techStack && <span style={{ opacity: 0.6 }}> · </span>}
+                    {proj.techStack && <span style={{ opacity: 0.75 }}>{proj.techStack}</span>}
+                  </div>
+                </div>
+                {formatProjectDateRange(proj) && (
+                  <div style={s.dateRange}>{formatProjectDateRange(proj)}</div>
+                )}
+              </div>
+              {(proj.liveUrl || proj.repoUrl) && (
+                <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: "3px 14px", fontSize: 9.5, opacity: 0.7 }}>
+                  {proj.liveUrl && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <svg width="9" height="9" viewBox="0 0 14 14" fill="none">
+                        <path d="M6 2H3a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8M8 2h4m0 0v4m0-4L5.5 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {proj.liveUrl}
+                    </span>
+                  )}
+                  {proj.repoUrl && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <svg width="9" height="9" viewBox="0 0 13 13" fill="none">
+                        <path d="M6.5 1a5.5 5.5 0 00-1.74 10.72c.28.05.38-.12.38-.26v-.9c-1.53.33-1.85-.74-1.85-.74-.25-.64-.62-.8-.62-.8-.5-.35.04-.34.04-.34.56.04.85.57.85.57.5.85 1.3.6 1.62.46.05-.36.2-.6.36-.74-1.22-.14-2.5-.61-2.5-2.73 0-.6.22-1.1.57-1.48-.06-.14-.25-.7.05-1.46 0 0 .47-.15 1.52.57a5.3 5.3 0 012.76 0c1.06-.72 1.52-.57 1.52-.57.3.76.11 1.32.05 1.46.36.39.57.88.57 1.48 0 2.13-1.3 2.6-2.53 2.73.2.17.37.51.37 1.03v1.52c0 .15.1.32.38.27A5.5 5.5 0 006.5 1z" fill="currentColor" />
+                      </svg>
+                      {proj.repoUrl}
+                    </span>
+                  )}
+                </div>
+              )}
+              {proj.description && (
+                <div style={{ marginTop: 5, fontSize: 10.5, lineHeight: 1.65, opacity: 0.85 }}>
+                  {proj.description.split("\n").map((line, j) => <div key={j} style={{ marginBottom: 2 }}>{line}</div>)}
+                </div>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
       {cv.education?.length > 0 && (
         <section style={{ marginBottom: 22 }}>
           <h2 style={s.sectionHeading}>Education</h2>
@@ -455,9 +281,8 @@ function CVDocument({ cv, template }) {
                   <div style={s.company}>{edu.institute}</div>
                 </div>
               </div>
-              {edu.description && (
-                <div style={{ fontSize: 10.5, opacity: 0.75, marginTop: 4 }}>{edu.description}</div>
-              )}
+              {edu.description && <div style={{ fontSize: 10.5, opacity: 0.75, marginTop: 4 }}>{edu.description}</div>}
+              {edu.gpa && <div style={{ fontSize: 10.5, color: s.wrap.color, opacity: 0.75, marginTop: 2 }}>GPA: <span style={{ fontWeight: 600, opacity: 1 }}>{edu.gpa}</span></div>}
               {edu.subjects?.length > 0 && (
                 <div style={{ marginTop: 6 }}>
                   <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 10 }}>
@@ -482,14 +307,11 @@ function CVDocument({ cv, template }) {
           ))}
         </section>
       )}
-
       {cv.skills?.length > 0 && (
         <section>
           <h2 style={s.sectionHeading}>Skills</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 8px" }}>
-            {cv.skills.map((skill, i) => (
-              <span key={i} style={s.skillChip}>{skill}</span>
-            ))}
+            {cv.skills.map((skill, i) => <span key={i} style={s.skillChip}>{skill}</span>)}
           </div>
         </section>
       )}
@@ -497,102 +319,69 @@ function CVDocument({ cv, template }) {
   );
 }
 
-// ── Single-page A4 scaler ──────────────────────────────────────
+// ── Scaled A4 ─────────────────────────────────────────────────
 function ScaledA4({ cv, template, outerRef, watermarkRef }) {
-  const measureRef = useRef();
+  const containerRef = useRef();
   const [scale, setScale] = useState(1);
   const [ready, setReady] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(A4_W);
 
-  const recalc = useCallback(() => {
-    if (!measureRef.current) return;
-    const h = measureRef.current.scrollHeight;
-    const next = h > A4_H ? A4_H / h : 1;
-    setScale(next);
-    setReady(true);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
     setReady(false);
-    const id = requestAnimationFrame(() => { recalc(); });
+    const id = requestAnimationFrame(() => {
+      const scaleW = containerWidth < A4_W ? containerWidth / A4_W : 1;
+      setScale(scaleW);
+      setReady(true);
+    });
     return () => cancelAnimationFrame(id);
-  }, [cv, template, recalc]);
+  }, [cv, template, containerWidth]);
 
+  // Natural content height × scale = visible height
+  const scaledWidth  = A4_W * scale;
+  // We don't know content height until render; let it be auto (no clip)
   return (
-    <div
-      ref={outerRef}
-      style={{
-        position: "relative",
-        width: A4_W,
-        height: A4_H,
-        overflow: "hidden",
-        background: "#fff",
-        flexShrink: 0,
-      }}
-    >
+    <div ref={containerRef} style={{ width: "100%" }}>
+      {/* Outer ref is what html2pdf captures — full A4 width, natural height, no transform */}
       <div
-        ref={measureRef}
+        ref={outerRef}
         style={{
-          position: "absolute", top: 0, left: 0,
+          position: "relative",
           width: A4_W,
-          visibility: "hidden",
-          pointerEvents: "none",
-          zIndex: -1,
-        }}
-      >
-        <CVDocument cv={cv} template={template} />
-      </div>
-
-      <div
-        style={{
+          // NO fixed height, NO overflow:hidden → content grows freely
+          background: "#fff",
+          margin: "0 auto",
+          // Hide until we know the scale; avoids flash
+          opacity: ready ? 1 : 0,
+          transition: "opacity 0.2s ease",
+          // Scale down visually for the preview (transform doesn't affect layout)
           transformOrigin: "top left",
           transform: `scale(${scale})`,
-          width: scale < 1 ? `${A4_W / scale}px` : "100%",
-          opacity: ready ? 1 : 0,
-          transition: "opacity 0.15s ease",
+          // Compensate width so the parent sees the correct visual footprint
+          marginRight: `${-(A4_W - scaledWidth)}px`,
         }}
       >
         <CVDocument cv={cv} template={template} />
-      </div>
-
-      <div
-        ref={watermarkRef}
-        style={{
-          position: "absolute", inset: 0,
-          pointerEvents: "none",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 10,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='260'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' transform='rotate(-35 260 130)' font-family='Georgia%2C serif' font-size='28' font-weight='700' fill='rgba(220%2C38%2C38%2C0.13)' letter-spacing='2'%3EDOWNLOAD FOR WATERMARK-FREE PDF%3C/text%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "520px 260px",
-        }}
-      >
-        <div style={{
-          transform: "rotate(-32deg)",
-          textAlign: "center",
-          padding: "18px 36px",
-          border: "4px solid rgba(220, 38, 38, 0.22)",
-          borderRadius: 6,
-          background: "rgba(255,255,255,0.55)",
-          backdropFilter: "blur(1px)",
-          userSelect: "none",
-        }}>
-          <div style={{
-            fontFamily: "'Georgia', serif",
-            fontSize: 22, fontWeight: 800,
-            color: "rgba(185, 28, 28, 0.55)",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase", lineHeight: 1.3,
-          }}>
-            Download for
-          </div>
-          <div style={{
-            fontFamily: "'Georgia', serif",
-            fontSize: 15, fontWeight: 700,
-            color: "rgba(185, 28, 28, 0.45)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase", marginTop: 4,
-          }}>
-            Watermark-Free PDF
+        <div
+          ref={watermarkRef}
+          style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='260'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' transform='rotate(-35 260 130)' font-family='Georgia%2C serif' font-size='28' font-weight='700' fill='rgba(220%2C38%2C38%2C0.13)' letter-spacing='2'%3EDOWNLOAD FOR WATERMARK-FREE PDF%3C/text%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat", backgroundSize: "520px 260px",
+          }}
+        >
+          <div style={{ transform: "rotate(-32deg)", textAlign: "center", padding: "18px 36px", border: "4px solid rgba(220,38,38,0.22)", borderRadius: 6, background: "rgba(255,255,255,0.55)", backdropFilter: "blur(1px)", userSelect: "none" }}>
+            <div style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 800, color: "rgba(185,28,28,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1.3 }}>Download for</div>
+            <div style={{ fontFamily: "'Georgia', serif", fontSize: 15, fontWeight: 700, color: "rgba(185,28,28,0.45)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 4 }}>Watermark-Free PDF</div>
           </div>
         </div>
       </div>
@@ -600,20 +389,15 @@ function ScaledA4({ cv, template, outerRef, watermarkRef }) {
   );
 }
 
-// ── Star Rating Picker ─────────────────────────────────────────
+// ── Star Picker ────────────────────────────────────────────────
 function StarPicker({ value, onChange }) {
   const [hovered, setHovered] = useState(0);
   const display = hovered || value;
   return (
-    <div style={{ display: "flex", gap: 4, cursor: "pointer" }}>
+    <div style={{ display: "flex", gap: 2, cursor: "pointer" }}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <span
-          key={n}
-          onMouseEnter={() => setHovered(n)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => onChange(n)}
-          style={{ lineHeight: 1, transition: "transform 0.1s ease", transform: hovered === n ? "scale(1.2)" : "scale(1)" }}
-        >
+        <span key={n} onMouseEnter={() => setHovered(n)} onMouseLeave={() => setHovered(0)} onClick={() => onChange(n)}
+          style={{ lineHeight: 1, transition: "transform 0.1s", transform: hovered === n ? "scale(1.25)" : "scale(1)" }}>
           <StarIcon filled={n <= display} />
         </span>
       ))}
@@ -622,7 +406,7 @@ function StarPicker({ value, onChange }) {
 }
 
 // ── Review Form ────────────────────────────────────────────────
-function ReviewSection({ cvId }) {
+function ReviewForm({ cvId }) {
   const [name, setName]       = useState("");
   const [rating, setRating]   = useState(0);
   const [comment, setComment] = useState("");
@@ -633,192 +417,70 @@ function ReviewSection({ cvId }) {
   const handleSubmit = async () => {
     setError("");
     if (!rating) { setError("Please select a star rating."); return; }
-    if (comment.trim().length < 5) { setError("Please write at least a few words."); return; }
-
+    if (comment.trim().length < 5) { setError("Please write a few words."); return; }
     setSubmitting(true);
     try {
-      await submitReview(cvId, {
-        name: name.trim() || "Anonymous",
-        rating,
-        comment: comment.trim(),
-      });
+      await submitReview(cvId, { name: name.trim() || "Anonymous", rating, comment: comment.trim() });
       setSubmitted(true);
     } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+      setError(err.message || "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (submitted) {
-    return (
-      <div style={{
-        maxWidth: 580,
-        margin: "32px auto 0",
-        background: "var(--surface)",
-        border: "1.5px solid var(--border)",
-        borderRadius: "var(--radius)",
-        padding: "40px 32px",
-        textAlign: "center",
-        boxShadow: "var(--shadow-sm)",
-      }}>
-        <CheckCircleIcon />
-        <div style={{
-          fontFamily: "var(--serif)",
-          fontSize: 20,
-          fontWeight: 600,
-          color: "var(--text-h)",
-          marginTop: 16,
-          marginBottom: 8,
-        }}>
-          Thank you for your feedback!
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0 }}>
-          Your review has been saved.
-        </p>
-      </div>
-    );
-  }
+  const inputStyle = {
+    width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13,
+    border: "1.5px solid var(--border)", borderRadius: "var(--radius-sm)",
+    background: "var(--surface-2)", color: "var(--text-h)",
+    outline: "none", fontFamily: "inherit", transition: "border-color 0.15s",
+  };
+
+  if (submitted) return (
+    <div style={{ textAlign: "center", padding: "28px 16px" }}>
+      <CheckCircleIcon />
+      <div style={{ fontWeight: 600, color: "var(--text-h)", marginTop: 14, fontSize: 15 }}>Thanks for your feedback!</div>
+      <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "6px 0 0" }}>Your review has been saved.</p>
+    </div>
+  );
 
   return (
-    <div style={{
-      maxWidth: 580,
-      margin: "32px auto 0",
-      background: "var(--surface)",
-      border: "1.5px solid var(--border)",
-      borderRadius: "var(--radius)",
-      padding: "28px 32px",
-      boxShadow: "var(--shadow-sm)",
-    }}>
-      {/* Header */}
-      <div style={{ marginBottom: 22 }}>
-        <div style={{
-          fontFamily: "var(--serif)",
-          fontSize: 17,
-          fontWeight: 600,
-          color: "var(--text-h)",
-          marginBottom: 4,
-        }}>
-          Leave a Review
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>
-          How was your experience using the CV builder?
-        </p>
-      </div>
-
-      {/* Star rating */}
-      <div style={{ marginBottom: 18 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-h)", marginBottom: 8 }}>
-          Your Rating <span style={{ color: "var(--danger)" }}>*</span>
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+          Rating <span style={{ color: "var(--danger)" }}>*</span>
         </label>
         <StarPicker value={rating} onChange={setRating} />
-        {rating > 0 && (
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 5 }}>
-            {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}
-          </div>
-        )}
+        {rating > 0 && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 5 }}>{["","Poor","Fair","Good","Very Good","Excellent"][rating]}</div>}
       </div>
 
-      {/* Name */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+          Name <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "var(--text-muted)", opacity: 0.7 }}>(optional)</span>
+        </label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Anonymous" maxLength={60} style={inputStyle}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+          onBlur={(e)  => (e.target.style.borderColor = "var(--border)")} />
+      </div>
+
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-h)", marginBottom: 6 }}>
-          Your Name <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(optional)</span>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+          Review <span style={{ color: "var(--danger)" }}>*</span>
         </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Anonymous"
-          maxLength={60}
-          style={{
-            width: "100%",
-            boxSizing: "border-box",
-            padding: "9px 12px",
-            fontSize: 14,
-            border: "1.5px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            background: "var(--surface-2)",
-            color: "var(--text-h)",
-            outline: "none",
-            fontFamily: "inherit",
-            transition: "border-color 0.15s ease",
-          }}
-          onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-          onBlur={(e)  => e.target.style.borderColor = "var(--border)"}
-        />
+        <textarea value={comment} onChange={(e) => setComment(e.target.value)}
+          placeholder="Share your experience…" rows={4} maxLength={600}
+          style={{ ...inputStyle, resize: "vertical", minHeight: 88 }}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+          onBlur={(e)  => (e.target.style.borderColor = "var(--border)")} />
+        <div style={{ textAlign: "right", fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>{comment.length}/600</div>
       </div>
 
-      {/* Comment */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-h)", marginBottom: 6 }}>
-          Your Review <span style={{ color: "var(--danger)" }}>*</span>
-        </label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Share your experience with the CV builder…"
-          rows={4}
-          maxLength={600}
-          style={{
-            width: "100%",
-            boxSizing: "border-box",
-            padding: "9px 12px",
-            fontSize: 14,
-            border: "1.5px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            background: "var(--surface-2)",
-            color: "var(--text-h)",
-            outline: "none",
-            fontFamily: "inherit",
-            resize: "vertical",
-            minHeight: 96,
-            transition: "border-color 0.15s ease",
-          }}
-          onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-          onBlur={(e)  => e.target.style.borderColor = "var(--border)"}
-        />
-        <div style={{ textAlign: "right", fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>
-          {comment.length} / 600
-        </div>
-      </div>
+      {error && <div style={{ marginBottom: 12, padding: "8px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius-sm)", fontSize: 13, color: "#b91c1c" }}>{error}</div>}
 
-      {/* Error */}
-      {error && (
-        <div style={{
-          marginBottom: 14,
-          padding: "9px 12px",
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
-          borderRadius: "var(--radius-sm)",
-          fontSize: 13,
-          color: "#b91c1c",
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Submit */}
-      <button
-        type="button"
-        className="btn-primary"
-        onClick={handleSubmit}
-        disabled={submitting}
-        style={{ width: "100%", justifyContent: "center" }}
-      >
+      <button type="button" className="btn-primary" onClick={handleSubmit} disabled={submitting} style={{ width: "100%", justifyContent: "center" }}>
         {submitting ? (
-          <>
-            <span style={{
-              width: 14, height: 14,
-              border: "2px solid rgba(255,255,255,0.3)",
-              borderTopColor: "#fff", borderRadius: "50%",
-              display: "inline-block",
-              animation: "spin 0.6s linear infinite",
-            }} />
-            Submitting…
-          </>
-        ) : (
-          "Submit Review"
-        )}
+          <><span style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} /> Submitting…</>
+        ) : "Submit Review"}
       </button>
     </div>
   );
@@ -829,220 +491,604 @@ function CVView() {
   const navigate = useNavigate();
   const cvRef = useRef();
   const watermarkRef = useRef();
-  const [cv, setCv]           = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [cv, setCv]             = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState("");
   const [exporting, setExporting] = useState(false);
-  const [template, setTemplate] = useState(
-    () => localStorage.getItem("cv_template") || "classic"
-  );
-
-  const TEMPLATE_LABELS = {
-    classic:   "Classic",
-    modern:    "Modern",
-    minimal:   "Minimal",
-    executive: "Executive",
-  };
+  const [template, setTemplate] = useState(() => localStorage.getItem("cv_template") || "classic");
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   useEffect(() => {
     const id = getCVId();
     if (!id) { setError("No CV session found."); setLoading(false); return; }
-    getCV(id)
-      .then(setCv)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    getCV(id).then(setCv).catch((err) => setError(err.message)).finally(() => setLoading(false));
   }, []);
 
-  const handleTemplateChange = (tpl) => {
-    setTemplate(tpl);
-    localStorage.setItem("cv_template", tpl);
-  };
+  const handleTemplateChange = (tpl) => { setTemplate(tpl); localStorage.setItem("cv_template", tpl); };
 
-  const handleDownload = async () => {
-    if (!cvRef.current) return;
-    setExporting(true);
-    if (watermarkRef.current) watermarkRef.current.style.display = "none";
-    try {
-      const name = cv?.personalInfo?.fullName?.replace(/\s+/g, "_") || "CV";
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: `${name}_CV.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2, useCORS: true, letterRendering: true,
-            width: A4_W, height: A4_H, windowWidth: A4_W,
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        })
-        .from(cvRef.current)
-        .save();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (watermarkRef.current) watermarkRef.current.style.display = "flex";
-      setExporting(false);
-    }
-  };
+  // In handleDownload, replace the html2pdf call section:
 
-  // ── Loading ────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{
-            width: 40, height: 40, border: "3px solid var(--border)", borderTopColor: "var(--accent)",
-            borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 16px",
-          }} />
-          <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading your CV…</p>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+const handleDownload = async () => {
+  if (!cvRef.current) return;
+  setExporting(true);
+  if (watermarkRef.current) watermarkRef.current.style.display = "none";
+
+  // Inject a @page style so page 2+ get top/bottom breathing room
+  const pageStyle = document.createElement("style");
+  pageStyle.id = "__cv-page-style__";
+  pageStyle.textContent = `@page { margin: 18mm 0 18mm; }`;
+  document.head.appendChild(pageStyle);
+
+  try {
+    const name = cv?.personalInfo?.fullName?.replace(/\s+/g, "_") || "CV";
+
+    const el = cvRef.current;
+    const prevTransform       = el.style.transform;
+    const prevTransformOrigin = el.style.transformOrigin;
+    const prevOpacity         = el.style.opacity;
+    const prevMarginRight     = el.style.marginRight;
+    el.style.transform        = "none";
+    el.style.transformOrigin  = "top left";
+    el.style.opacity          = "1";
+    el.style.marginRight      = "0";
+
+    await html2pdf()
+      .set({
+        margin: [18, 0, 18, 0],   // top, right, bottom, left  — in mm
+        filename: `${name}_CV.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          width: A4_W,
+          windowWidth: A4_W,
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      })
+      .from(el)
+      .save();
+
+    el.style.transform        = prevTransform;
+    el.style.transformOrigin  = prevTransformOrigin;
+    el.style.opacity          = prevOpacity;
+    el.style.marginRight      = prevMarginRight;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    // Remove injected page style
+    const injected = document.getElementById("__cv-page-style__");
+    if (injected) injected.remove();
+
+    if (watermarkRef.current) watermarkRef.current.style.display = "";
+    setExporting(false);
   }
+};
 
-  // ── Error ──────────────────────────────────────────────────
-  if (error) {
-    return (
-      <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
-          <p style={{ color: "var(--danger)", marginBottom: 20 }}>{error}</p>
-          <button className="btn-primary" onClick={() => navigate("/")}>Start Over</button>
-        </div>
+  // ── Loading ──────────────────────────────────────────────────
+  if (loading) return (
+    <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 40, height: 40, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 16px" }} />
+        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading your CV…</p>
       </div>
-    );
-  }
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
-  // ── Main render ────────────────────────────────────────────
+  // ── Error ────────────────────────────────────────────────────
+  if (error) return (
+    <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ textAlign: "center", maxWidth: 400 }}>
+        <p style={{ color: "var(--danger)", marginBottom: 20 }}>{error}</p>
+        <button className="btn-primary" onClick={() => navigate("/")}>Start Over</button>
+      </div>
+    </div>
+  );
+
+  const currentMeta = TEMPLATE_META[template];
+
+  // ── Desktop two-panel layout ─────────────────────────────────
   return (
-    <div style={{ minHeight: "100svh", background: "var(--surface-2)", paddingBottom: 60 }}>
+    <div style={{ minHeight: "100svh", background: "var(--surface-2)" }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-      {/* ── Toolbar ── */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 100,
-        background: "var(--surface)",
-        borderBottom: "1.5px solid var(--border)",
-        padding: "12px 24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
-        boxShadow: "var(--shadow-sm)",
-      }}>
-        <div>
-          <div style={{ fontFamily: "var(--serif)", fontSize: 18, fontWeight: 600, color: "var(--text-h)" }}>
-            Your CV
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-            Ready to export
-          </div>
-        </div>
+        /* ── Desktop two-panel ── */
+        .cvview-layout {
+          display: flex;
+          min-height: 100svh;
+        }
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          {/* Template switcher */}
-          <div style={{
-            display: "flex",
-            background: "var(--surface-2)",
-            border: "1.5px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            padding: 3, gap: 2,
-          }}>
-            {Object.entries(TEMPLATE_LABELS).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => handleTemplateChange(id)}
-                style={{
-                  fontSize: 12,
-                  fontWeight: template === id ? 700 : 400,
-                  padding: "5px 12px",
-                  borderRadius: 5, border: "none", cursor: "pointer",
-                  background: template === id ? "var(--surface)" : "transparent",
-                  color: template === id ? "var(--text-h)" : "var(--text-muted)",
-                  boxShadow: template === id ? "var(--shadow-sm)" : "none",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                {label}
+        /* Left sidebar */
+        .cvview-sidebar {
+          width: 300px;
+          flex-shrink: 0;
+          background: var(--surface);
+          border-right: 1.5px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100svh;
+          overflow-y: auto;
+        }
+
+        /* Right canvas */
+        .cvview-canvas {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          background:
+            radial-gradient(ellipse at 60% 0%, rgba(var(--accent-rgb, 99,102,241),0.06) 0%, transparent 60%),
+            var(--surface-2);
+          padding: 40px 32px 60px;
+        }
+
+        .cv-paper-shadow {
+          box-shadow:
+            0 0 0 1px rgba(0,0,0,0.06),
+            0 8px 24px rgba(0,0,0,0.10),
+            0 32px 64px rgba(0,0,0,0.08);
+          border-radius: 3px;
+          overflow: hidden;
+          animation: fadeUp 0.4s ease both;
+          max-width: ${A4_W}px;
+          width: 100%;
+        }
+
+        /* Template cards grid */
+        .template-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .template-btn {
+          border: 1.5px solid var(--border);
+          border-radius: var(--radius-sm);
+          background: var(--surface-2);
+          cursor: pointer;
+          padding: 10px 10px 8px;
+          text-align: left;
+          transition: all 0.15s ease;
+          position: relative;
+          outline: none;
+        }
+        .template-btn:hover { border-color: var(--border-focus); background: var(--surface); }
+        .template-btn.active { border-color: var(--accent); background: var(--accent-bg); }
+
+        .template-btn-dot {
+          width: 10px; height: 10px;
+          border-radius: 50%;
+          margin-bottom: 6px;
+          flex-shrink: 0;
+        }
+        .template-btn-name {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-h);
+          display: block;
+        }
+        .template-btn-badge {
+          font-size: 10px;
+          color: var(--text-muted);
+          display: block;
+          margin-top: 1px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .template-check {
+          position: absolute;
+          top: 8px; right: 8px;
+          width: 16px; height: 16px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0;
+          transition: opacity 0.15s;
+        }
+        .template-btn.active .template-check { opacity: 1; }
+
+        /* Sidebar section separator */
+        .sidebar-section {
+          padding: 18px 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .sidebar-section:last-child { border-bottom: none; }
+
+        .sidebar-label {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 12px;
+          display: block;
+        }
+
+        /* Review collapsible in sidebar (desktop only) */
+        .review-toggle {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          color: var(--text-h);
+        }
+
+        /* Watermark notice pill */
+        .watermark-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #fffbeb;
+          border: 1px solid #fcd34d;
+          border-radius: 20px;
+          padding: 5px 12px;
+          font-size: 12px;
+          color: #92400e;
+          margin-bottom: 20px;
+          animation: fadeUp 0.4s 0.1s ease both;
+        }
+
+        /* ─────────────────────────────────────────────────────
+           Mobile layout — everything stacked vertically
+           Order: template picker → CV preview → buttons → review
+        ───────────────────────────────────────────────────── */
+        @media (max-width: 860px) {
+          /* Stack layout */
+          .cvview-layout { flex-direction: column; }
+
+          /* Hide the sidebar entirely on mobile */
+          .cvview-sidebar { display: none; }
+
+          /* Canvas becomes the full-width scroll container */
+          .cvview-canvas {
+            padding: 0 0 48px;
+            background: var(--surface-2);
+            align-items: stretch;
+          }
+
+          /* ── 1. Template strip ── */
+          .mobile-template-strip {
+            display: block;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px;
+          }
+
+          .mobile-template-strip .strip-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: block;
+          }
+
+          .mobile-template-strip .template-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 7px;
+          }
+
+          /* ── 2. CV preview ── */
+          .mobile-cv-area {
+            display: block;
+            padding: 16px 12px 12px;
+          }
+
+          .mobile-cv-area .mobile-watermark-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #92400e;
+            margin-bottom: 10px;
+          }
+
+          /* ── 3. Action buttons ── */
+          .mobile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px 4px;
+          }
+
+          .mobile-actions .btn-primary,
+          .mobile-actions .btn-secondary {
+            width: 100%;
+            justify-content: center;
+          }
+
+          /* ── 4. Info notices ── */
+          .mobile-notices {
+            padding: 12px 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          /* ── 5. Review section ── */
+          .mobile-review {
+            display: block;
+            margin: 16px 16px 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+          }
+
+          .mobile-review-header {
+            padding: 14px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+          }
+
+          .mobile-review-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-h);
+            margin: 0 0 2px;
+          }
+
+          .mobile-review-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0;
+          }
+
+          .mobile-review-body {
+            padding: 16px;
+          }
+
+          /* Hide desktop-only watermark pill on mobile */
+          .cvview-canvas > .watermark-pill { display: none; }
+        }
+
+        /* Narrower phones: 2-col template grid */
+        @media (max-width: 440px) {
+          .mobile-template-strip .template-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
+
+      <div className="cvview-layout">
+
+        {/* ══ LEFT SIDEBAR (desktop only) ═══════════════════════ */}
+        <aside className="cvview-sidebar">
+
+          {/* Brand / title */}
+          <div className="sidebar-section" style={{ paddingTop: 22, paddingBottom: 22 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--serif)", color: "var(--text-h)", marginBottom: 2 }}>
+              Your CV
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              {cv?.personalInfo?.fullName ? `Ready for ${cv.personalInfo.fullName.split(" ")[0]}` : "Ready to export"}
+            </div>
+          </div>
+
+          {/* Template picker */}
+          <div className="sidebar-section">
+            <span className="sidebar-label">Template</span>
+            <div className="template-grid">
+              {Object.entries(TEMPLATE_META).map(([id, meta]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`template-btn ${template === id ? "active" : ""}`}
+                  onClick={() => handleTemplateChange(id)}
+                >
+                  <div className="template-btn-dot" style={{ background: meta.accent, opacity: template === id ? 1 : 0.5 }} />
+                  <span className="template-btn-name">{meta.label}</span>
+                  {meta.badge && <span className="template-btn-badge">{meta.badge}</span>}
+                  <div className="template-check" style={{ background: meta.accent }}>
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                      <path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Selected template accent bar */}
+            <div style={{ marginTop: 14, padding: "9px 12px", background: "var(--surface-2)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 28, borderRadius: 2, background: currentMeta.accent, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-h)" }}>{currentMeta.label}</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{currentMeta.badge || "Clean & professional"}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="sidebar-section">
+            <span className="sidebar-label">Actions</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <button type="button" className="btn-primary" onClick={handleDownload} disabled={exporting}
+                style={{ width: "100%", justifyContent: "center" }}>
+                {exporting ? (
+                  <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
+                ) : (
+                  <><DownloadIcon />Download PDF</>
+                )}
               </button>
-            ))}
+              {/* <button type="button" className="btn-secondary" onClick={() => navigate("/summary")}
+                style={{ width: "100%", justifyContent: "center" }}>
+                <EditIcon /> Edit CV
+              </button> */}
+            </div>
           </div>
 
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => navigate("/summary")}
-            style={{ fontSize: 13 }}
-          >
-            <EditIcon /> Edit
-          </button>
+          {/* Watermark notice */}
+          <div className="sidebar-section">
+            <div style={{ display: "flex", gap: 10, padding: "10px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "var(--radius-sm)", fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
+              <LockIcon />
+              <span><strong>Preview mode</strong> — CV is watermarked. Download exports a clean, watermark-free PDF.</span>
+            </div>
+          </div>
 
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleDownload}
-            disabled={exporting}
-            style={{ position: "relative" }}
-          >
-            {exporting ? (
-              <>
-                <span style={{
-                  width: 14, height: 14,
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff", borderRadius: "50%",
-                  display: "inline-block",
-                  animation: "spin 0.6s linear infinite",
-                }} />
-                Exporting…
-              </>
-            ) : (
-              <><DownloadIcon /> Download PDF</>
+          {/* ATS guarantee */}
+          <div className="sidebar-section">
+            <div style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.55 }}>
+              <span style={{ fontSize: 15, flexShrink: 0 }}>✅</span>
+              <span><strong style={{ color: "var(--text-h)" }}>ATS-safe</strong> — single-column, no images or tables.</span>
+            </div>
+          </div>
+
+          {/* Review (collapsible — desktop sidebar) */}
+          <div className="sidebar-section" style={{ flex: 1 }}>
+            <button className="review-toggle" onClick={() => setReviewOpen((o) => !o)}>
+              <span className="sidebar-label" style={{ margin: 0 }}>Leave a Review</span>
+              <ChevronIcon open={reviewOpen} />
+            </button>
+            {reviewOpen && (
+              <div style={{ marginTop: 16, animation: "fadeUp 0.2s ease both" }}>
+                {cv && <ReviewForm cvId={cv._id} />}
+              </div>
             )}
-          </button>
-        </div>
+          </div>
+        </aside>
+
+        {/* ══ RIGHT CANVAS ══════════════════════════════════════ */}
+        <main className="cvview-canvas">
+
+          {/* Desktop watermark pill (hidden on mobile via CSS) */}
+          <div className="watermark-pill">
+            <LockIcon />
+            Preview — watermarked
+          </div>
+
+          {/* ── MOBILE-ONLY CONTENT (hidden on desktop via CSS) ── */}
+
+          {/* 1. Template strip */}
+          <div className="mobile-template-strip">
+            <span className="strip-label">Template</span>
+            <div className="template-grid">
+              {Object.entries(TEMPLATE_META).map(([id, meta]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`template-btn ${template === id ? "active" : ""}`}
+                  onClick={() => handleTemplateChange(id)}
+                >
+                  <div className="template-btn-dot" style={{ background: meta.accent, opacity: template === id ? 1 : 0.5 }} />
+                  <span className="template-btn-name">{meta.label}</span>
+                  {meta.badge && <span className="template-btn-badge">{meta.badge}</span>}
+                  <div className="template-check" style={{ background: meta.accent }}>
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                      <path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. CV preview */}
+          <div className="mobile-cv-area">
+            <div className="mobile-watermark-pill">
+              <LockIcon />
+              Preview — watermarked
+            </div>
+            <div className="cv-paper-shadow" style={{ width: "100%" }}>
+              {cv && (
+                <ScaledA4
+                  cv={cv}
+                  template={template}
+                  outerRef={cvRef}
+                  watermarkRef={watermarkRef}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* 3. Action buttons */}
+          <div className="mobile-actions">
+            <button type="button" className="btn-primary" onClick={handleDownload} disabled={exporting}
+              style={{ width: "100%", justifyContent: "center" }}>
+              {exporting ? (
+                <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
+              ) : (
+                <><DownloadIcon />Download PDF</>
+              )}
+            </button>
+            {/* <button type="button" className="btn-secondary" onClick={() => navigate("/summary")}
+              style={{ width: "100%", justifyContent: "center" }}>
+              <EditIcon /> Edit CV
+            </button> */}
+          </div>
+
+          {/* 4. Info notices */}
+          <div className="mobile-notices">
+            <div style={{ display: "flex", gap: 10, padding: "10px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "var(--radius-sm)", fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
+              <LockIcon />
+              <span><strong>Preview mode</strong> — CV is watermarked. Download exports a clean, watermark-free PDF.</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-muted)", lineHeight: 1.55 }}>
+              <span style={{ fontSize: 15, flexShrink: 0 }}>✅</span>
+              <span><strong style={{ color: "var(--text-h)" }}>ATS-safe</strong> — single-column, no images or tables.</span>
+            </div>
+          </div>
+
+          {/* 5. Leave a Review — always visible on mobile */}
+          <div className="mobile-review">
+            <div className="mobile-review-header">
+              <p className="mobile-review-title">Leave a Review</p>
+              <p className="mobile-review-subtitle">How was your experience building your CV?</p>
+            </div>
+            <div className="mobile-review-body">
+              {cv && <ReviewForm cvId={cv._id} />}
+            </div>
+          </div>
+
+          {/* ── Desktop CV paper (visible on desktop, sits after watermark pill) ── */}
+          <div className="cv-paper-shadow desktop-cv-paper" style={{ width: "100%" }}>
+            {cv && (
+              <ScaledA4
+                cv={cv}
+                template={template}
+                outerRef={cvRef}
+                watermarkRef={watermarkRef}
+              />
+            )}
+          </div>
+
+        </main>
       </div>
 
-      {/* ── Watermark notice banner ── */}
-      <div style={{
-        background: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)",
-        border: "1px solid #fcd34d",
-        borderRadius: 8,
-        margin: "20px auto 0",
-        maxWidth: 860,
-        padding: "10px 18px",
-        display: "flex", alignItems: "center", gap: 10,
-        fontSize: 13, color: "#92400e",
-      }}>
-        <LockIcon />
-        <span>
-          <strong>Preview mode</strong> — your CV is watermarked below.{" "}
-          Download PDF exports a clean, watermark-free version.
-        </span>
-      </div>
-
-      {/* ── CV Paper ── */}
-      <div style={{ padding: "20px 20px 32px", overflowX: "auto" }}>
-        <div style={{
-          width: "fit-content",
-          margin: "0 auto",
-          boxShadow: "0 4px 32px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)",
-          borderRadius: 4,
-          overflow: "hidden",
-        }}>
-          {cv && (
-            <ScaledA4
-              cv={cv}
-              template={template}
-              outerRef={cvRef}
-              watermarkRef={watermarkRef}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* ── Review Section ── */}
-      <div style={{ padding: "0 20px 48px" }}>
-        {cv && <ReviewSection cvId={cv._id} />}
-      </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        /* On desktop: hide the mobile-only blocks */
+        @media (min-width: 861px) {
+          .mobile-template-strip,
+          .mobile-cv-area,
+          .mobile-actions,
+          .mobile-notices,
+          .mobile-review { display: none !important; }
+        }
+        /* On mobile: hide the desktop CV paper */
+        @media (max-width: 860px) {
+          .desktop-cv-paper { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

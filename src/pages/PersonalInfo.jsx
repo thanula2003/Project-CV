@@ -12,11 +12,14 @@ const STEPS = [
 
 function StepProgress({ current }) {
   return (
-    <div className="step-progress">
+    <div
+      className="step-progress"
+      style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 4 }}
+    >
       {STEPS.map((step, i) => {
         const status = i < current ? "done" : i === current ? "active" : "";
         return (
-          <div key={i} className="step-item">
+          <div key={i} className="step-item" style={{ flexShrink: 0 }}>
             <div className={`step-dot ${status}`}>
               {status === "done" ? "✓" : i + 1}
             </div>
@@ -53,9 +56,107 @@ const TrashIcon = () => (
   </svg>
 );
 
+function ATSModal({ onDismiss, onRemove }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.45)",
+        backdropFilter: "blur(3px)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+      onClick={onDismiss}
+    >
+      <div
+        style={{
+          background: "var(--surface, #fff)",
+          borderRadius: "var(--radius, 12px)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+          padding: "28px 24px 24px",
+          maxWidth: 400,
+          width: "100%",
+          animation: "atsModalIn 0.2s ease",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Icon */}
+        <div style={{
+          width: 48, height: 48,
+          borderRadius: "50%",
+          background: "rgba(234,179,8,0.12)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          marginBottom: 16,
+        }}>
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1.5L14.5 13H1.5L8 1.5z" stroke="#ca8a04" strokeWidth="1.4" strokeLinejoin="round" />
+            <path d="M8 6v3.5" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="8" cy="11" r="0.6" fill="#ca8a04" />
+          </svg>
+        </div>
+
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px", color: "var(--text, #111)" }}>
+          ATS Warning
+        </h2>
+        <p style={{ fontSize: 13.5, color: "var(--text-muted, #666)", margin: "0 0 20px", lineHeight: 1.6 }}>
+          <strong style={{ color: "var(--text, #111)" }}>Images may reduce your score in ATS ranking!</strong>
+          {" "}Many companies use Applicant Tracking Systems that cannot read images
+          and may misparse your CV. Consider skipping the photo if applying to
+          companies that use ATS screening.
+        </p>
+
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          {/* De-emphasised — destructive action */}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onRemove}
+            style={{
+              fontSize: 13,
+              padding: "9px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: "var(--radius-sm)",
+            }}
+          >
+            <TrashIcon /> Remove Photo
+          </button>
+          {/* Primary — safe / recommended action */}
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onDismiss}
+            style={{ fontSize: 13, padding: "9px 18px" }}
+          >
+            Got it, keep photo
+          </button>
+        </div>
+      </div>
+
+      {/* Keyframe animation */}
+      <style>{`
+        @keyframes atsModalIn {
+          from { opacity: 0; transform: scale(0.93) translateY(8px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function PersonalInfo() {
   const navigate = useNavigate();
   const fileInputRef = useRef();
+  const [showATSModal, setShowATSModal] = useState(false);
+  const handleATSRemove = () => {
+    handleRemovePhoto();
+    setShowATSModal(false);
+  };
 
   const [form, setForm] = useState({
     fullName: "",
@@ -95,6 +196,7 @@ function PersonalInfo() {
     reader.onload = (ev) => {
       setPhoto(ev.target.result);
       setError("");
+      setShowATSModal(true);
     };
     reader.readAsDataURL(file);
   };
@@ -122,7 +224,13 @@ function PersonalInfo() {
   };
 
   return (
-    <div className="page-wrapper">
+        <div className="page-wrapper">
+          {showATSModal && (
+      <ATSModal
+        onDismiss={() => setShowATSModal(false)}
+        onRemove={handleATSRemove}
+      />
+    )}
       <div className="page-card">
         <StepProgress current={0} />
 
@@ -147,10 +255,18 @@ function PersonalInfo() {
               </span>
             </label>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            {/* Photo row — wraps on very small screens */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 16,
+              flexWrap: "wrap",
+            }}>
               {/* Preview or placeholder */}
               <div style={{
-                width: 88, height: 88, borderRadius: "50%",
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
                 border: "2px dashed var(--border)",
                 background: "var(--surface-2)",
                 overflow: "hidden",
@@ -174,7 +290,7 @@ function PersonalInfo() {
               </div>
 
               {/* Buttons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 140 }}>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -186,7 +302,7 @@ function PersonalInfo() {
                   type="button"
                   className="btn-secondary"
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ padding: "7px 16px", fontSize: 13 }}
+                  style={{ padding: "9px 16px", fontSize: 13, width: "100%", justifyContent: "center" }}
                 >
                   <UploadIcon />
                   {photo ? "Change Photo" : "Upload Photo"}
@@ -197,7 +313,16 @@ function PersonalInfo() {
                     type="button"
                     className="btn-icon danger"
                     onClick={handleRemovePhoto}
-                    style={{ alignSelf: "flex-start", padding: "7px 14px", fontSize: 13, display: "flex", alignItems: "center", gap: 6, borderRadius: "var(--radius-sm)" }}
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "9px 14px",
+                      fontSize: 13,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      borderRadius: "var(--radius-sm)",
+                    }}
                   >
                     <TrashIcon /> Remove
                   </button>
@@ -236,8 +361,13 @@ function PersonalInfo() {
 
           <div className="section-divider" />
 
-          {/* Core fields */}
-          <div className="form-grid">
+          {/* Core fields — single column on mobile via CSS class, no override needed */}
+          <div
+            className="form-grid"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+            }}
+          >
             <div className="field">
               <label>Full Name *</label>
               <input
@@ -254,6 +384,7 @@ function PersonalInfo() {
                 placeholder="you@example.com"
                 value={form.email}
                 onChange={(e) => setField("email", e.target.value)}
+                autoComplete="email"
               />
             </div>
             <div className="field">
@@ -262,6 +393,7 @@ function PersonalInfo() {
                 type="date"
                 value={form.dateOfBirth}
                 onChange={(e) => setField("dateOfBirth", e.target.value)}
+                style={{ width: "100%" }}
               />
             </div>
             <div className="field">
@@ -279,11 +411,26 @@ function PersonalInfo() {
 
           {/* Phone Numbers */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--text-muted)" }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 14,
+              gap: 10,
+              flexWrap: "wrap",
+            }}>
+              <label style={{
+                fontSize: 12, fontWeight: 600, letterSpacing: "0.05em",
+                textTransform: "uppercase", color: "var(--text-muted)",
+              }}>
                 Phone Numbers
               </label>
-              <button type="button" className="btn-secondary" onClick={addPhone} style={{ padding: "7px 14px", fontSize: 13 }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={addPhone}
+                style={{ padding: "7px 14px", fontSize: 13, whiteSpace: "nowrap" }}
+              >
                 <PlusIcon /> Add Phone
               </button>
             </div>
@@ -296,10 +443,18 @@ function PersonalInfo() {
                       value={phone}
                       onChange={(e) => handlePhoneChange(i, e.target.value)}
                       placeholder={`Phone ${i + 1}`}
+                      autoComplete="tel"
+                      style={{ width: "100%" }}
                     />
                   </div>
                   {phones.length > 1 && (
-                    <button type="button" className="btn-icon danger" onClick={() => removePhone(i)} title="Remove">
+                    <button
+                      type="button"
+                      className="btn-icon danger"
+                      onClick={() => removePhone(i)}
+                      title="Remove"
+                      style={{ flexShrink: 0 }}
+                    >
                       <MinusIcon />
                     </button>
                   )}
@@ -312,16 +467,27 @@ function PersonalInfo() {
 
           {/* Online Profiles */}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--text-muted)", display: "block", marginBottom: 14 }}>
+            <label style={{
+              fontSize: 12, fontWeight: 600, letterSpacing: "0.05em",
+              textTransform: "uppercase", color: "var(--text-muted)",
+              display: "block", marginBottom: 14,
+            }}>
               Online Profiles
             </label>
-            <div className="form-grid">
+            <div
+              className="form-grid"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+              }}
+            >
               <div className="field">
                 <label>LinkedIn</label>
                 <div style={{ position: "relative" }}>
                   <span style={{
-                    position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)",
-                    fontSize: 13, color: "var(--text-muted)", pointerEvents: "none", userSelect: "none",
+                    position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+                    fontSize: 12, color: "var(--text-muted)", pointerEvents: "none", userSelect: "none",
+                    whiteSpace: "nowrap", overflow: "hidden",
+                    maxWidth: "38%",
                   }}>
                     linkedin.com/in/
                   </span>
@@ -330,7 +496,7 @@ function PersonalInfo() {
                     placeholder="yourname"
                     value={form.linkedIn}
                     onChange={(e) => setField("linkedIn", e.target.value)}
-                    style={{ paddingLeft: 114 }}
+                    style={{ paddingLeft: "clamp(90px, 38%, 114px)" }}
                   />
                 </div>
               </div>
@@ -343,8 +509,10 @@ function PersonalInfo() {
                 </label>
                 <div style={{ position: "relative" }}>
                   <span style={{
-                    position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)",
-                    fontSize: 13, color: "var(--text-muted)", pointerEvents: "none", userSelect: "none",
+                    position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+                    fontSize: 12, color: "var(--text-muted)", pointerEvents: "none", userSelect: "none",
+                    whiteSpace: "nowrap", overflow: "hidden",
+                    maxWidth: "30%",
                   }}>
                     github.com/
                   </span>
@@ -353,7 +521,7 @@ function PersonalInfo() {
                     placeholder="yourname"
                     value={form.github}
                     onChange={(e) => setField("github", e.target.value)}
-                    style={{ paddingLeft: 84 }}
+                    style={{ paddingLeft: "clamp(72px, 30%, 84px)" }}
                   />
                 </div>
               </div>
@@ -365,9 +533,26 @@ function PersonalInfo() {
           <p style={{ fontSize: 13, color: "var(--danger)", marginTop: 12 }}>{error}</p>
         )}
 
-        <div className="form-actions">
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Fields marked * are required</span>
-          <button type="button" className="btn-primary" onClick={handleNext} disabled={saving}>
+        {/* Actions — stack on mobile */}
+        <div
+          className="form-actions"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--text-muted)", flex: "1 1 auto" }}>
+            Fields marked * are required
+          </span>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleNext}
+            disabled={saving}
+            style={{ width: "100%", maxWidth: 220, justifyContent: "center" }}
+          >
             {saving ? "Saving…" : "Next: Education"}
             {!saving && (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

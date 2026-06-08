@@ -1,6 +1,11 @@
-// src/api.js  
+// src/api.js
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API_HOST =
+  window.location.hostname === "localhost"
+    ? "localhost"
+    : "192.168.1.100";
+
+const BASE = `http://${API_HOST}:3001/api`;
 
 async function request(method, path, body) {
   const res = await fetch(`${BASE}${path}`, {
@@ -25,15 +30,16 @@ export function getCVId() {
   return localStorage.getItem("cvId");
 }
 
-export const savePersonal        = (id, data)  => request("PUT", `/cv/${id}/personal`,         data);
-export const savePhoto           = (id, photo) => request("PUT", `/cv/${id}/photo`,  { photo });
-export const saveEducation       = (id, data)  => request("PUT", `/cv/${id}/education`,         data);
-export const saveExperience      = (id, data)  => request("PUT", `/cv/${id}/experience`,        data);
-export const saveSkills          = (id, data)  => request("PUT", `/cv/${id}/skills`,            data);
-export const saveSummary         = (id, text)  => request("PUT", `/cv/${id}/summary`, { summary: text });
+export const savePersonal        = (id, data)  => request("PUT", `/cv/${id}/personal`,   data);
+export const savePhoto           = (id, photo) => request("PUT", `/cv/${id}/photo`,       { photo });
+export const saveEducation       = (id, data)  => request("PUT", `/cv/${id}/education`,   data);
+export const saveExperience      = (id, data)  => request("PUT", `/cv/${id}/experience`,  data);
+export const saveProjects        = (id, data)  => request("PUT", `/cv/${id}/projects`,    data); // ← NEW
+export const saveSkills          = (id, data)  => request("PUT", `/cv/${id}/skills`,      data);
+export const saveSummary         = (id, text)  => request("PUT", `/cv/${id}/summary`,     { summary: text });
 export const getSkillSuggestions = (id)        => request("GET", `/cv/${id}/skill-suggestions`);
 export const generateSummary     = (id)        => request("GET", `/cv/${id}/generate-summary`);
 export const getCV               = (id)        => request("GET", `/cv/${id}`);
-export const submitReview        = (id, data)  => request("POST", `/cv/${id}/reviews`, data);
+export const submitReview        = (id, data)  => request("POST", `/cv/${id}/reviews`,   data);
 export const getRecentReviews    = ()          => request("GET", `/cv/reviews/top`);
 export const getLatestReviews    = (limit = 3) => request("GET", `/cv/reviews/recent?limit=${limit}`);

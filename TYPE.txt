@@ -1,3 +1,11 @@
+Thanula Maduka Rajapaksha
+
+Udagama,Barandana Rd;Mawathagama
+
+thanula
+
+-----------------------------------------EDUCATION------------------------------
+
 Sri Lanka Institute of Advanced Technological Institute
 
 Information Technology
@@ -5,10 +13,16 @@ Information Technology
 A dedicated and detail-oriented Information Technology student pursuing a Higher National Diploma in IT at SLIATE. Possesses a strong foundation in software engineering, database management, and web development. A fast learner and collaborative team player eager to apply academic knowledge to real-world projects and contribute effectively to a dynamic development environment.
 
 
+Cardiff Metropolitan University (UK)
 
+BSc (Hons) in Information Technology (Top-Up)
 
--------------------------------------------EXPERIECNE------------------------------
+Ambitious Cardiff Metropolitan University (UK) BSc (Hons) Information Technology student with a robust background in software engineering, modern web architectures, and database systems. Highly adept at navigating complex development lifecycles and adapting quickly to new technology stacks. Eager to leverage advanced academic project insights and strong collaborative skills within a dynamic, agile development environment.
+
+-----------------------------------------EXPERIECNE------------------------------
 
 QWERT inc  - Associate Developer
 
 Responsible for supporting the engineering team at QWERT inc. by building functional components, developing robust APIs, and optimizing database performance. Duties include translating project requirements into clean, maintainable code, troubleshooting technical issues, and ensuring application responsiveness and security. Actively participates in daily stand-ups and collaborative sprint planning, contributing to team goals while rapidly mastering the company's specific tech stack and deployment workflows.
+
+Contributed to the full-stack development lifecycle at QWERT Inc. by delivering clean, maintainable code for core application components and backend APIs. Focused heavily on enhancing database efficiency and application security to guarantee a seamless, high-performance user experience. Integrated seamlessly into an agile team environment through active participation in sprint planning and daily stand-ups, demonstrating a strong ability to quickly adapt to proprietary tech stacks and deployment pipelines.

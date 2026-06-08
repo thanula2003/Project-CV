@@ -13,6 +13,7 @@ const educationSchema = new mongoose.Schema(
     qualification: { type: String, trim: true },
     program:       { type: String, trim: true },
     description:   { type: String, trim: true },
+    gpa:           { type: String, trim: true },
     subjects:      [subjectSchema],
   },
   { _id: false }
@@ -34,14 +35,32 @@ const experienceSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// ── NEW: Review sub-schema ─────────────────────────────────────
+// ── NEW: Project sub-schema ────────────────────────────────────
+const projectSchema = new mongoose.Schema(
+  {
+    title:       { type: String, trim: true },
+    projectType: { type: String, trim: true },
+    techStack:   { type: String, trim: true },
+    liveUrl:     { type: String, trim: true },
+    repoUrl:     { type: String, trim: true },
+    startMonth:  { type: String },
+    startYear:   { type: String },
+    endMonth:    { type: String },
+    endYear:     { type: String },
+    isOngoing:   { type: Boolean, default: false },
+    description: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+// ── Review sub-schema ──────────────────────────────────────────
 const reviewSchema = new mongoose.Schema(
   {
     name:    { type: String, trim: true, default: "Anonymous" },
     rating:  { type: Number, min: 1, max: 5, required: true },
     comment: { type: String, trim: true, required: true },
   },
-  { timestamps: true }   // adds createdAt / updatedAt per review
+  { timestamps: true }
 );
 
 const cvSchema = new mongoose.Schema(
@@ -58,9 +77,10 @@ const cvSchema = new mongoose.Schema(
     photo:      { type: String, default: "" },
     education:  [educationSchema],
     experience: [experienceSchema],
+    projects:   [projectSchema],   // ← NEW
     skills:     [{ type: String, trim: true }],
     summary:    { type: String, trim: true },
-    reviews:    [reviewSchema],               // ← NEW
+    reviews:    [reviewSchema],
   },
   { timestamps: true, versionKey: false }
 );

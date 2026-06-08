@@ -30,7 +30,7 @@ router.get("/reviews/recent", async (req, res, next) => {
 
     const results = await CV.aggregate([
       { $unwind: "$reviews" },
-      { $match: { "reviews.rating": { $gte: 4 } } },  // ← hard filter: 1,2,3 star never included
+      { $match: { "reviews.rating": { $gte: 4 } } },
       {
         $project: {
           _id: 0,
@@ -48,12 +48,8 @@ router.get("/reviews/recent", async (req, res, next) => {
 });
 
 // ── GET /api/cv/reviews/top ────────────────────────────────────
-// Uses Gemini 1.5 Flash (free) to rank and return the top 9
-// most positive, genuine reviews across all CV documents.
-// Falls back to rating-sorted results if AI call fails.
 router.get("/reviews/top", async (req, res, next) => {
   try {
-    // 1. Pull every review from every CV document
     const results = await CV.aggregate([
       { $unwind: "$reviews" },
       {
@@ -70,13 +66,11 @@ router.get("/reviews/top", async (req, res, next) => {
 
     if (results.length === 0) return res.json({ reviews: [] });
 
-    // If 9 or fewer reviews, skip the AI call — just sort by rating
     if (results.length <= 9) {
       const sorted = [...results].sort((a, b) => b.rating - a.rating);
       return res.json({ reviews: sorted });
     }
 
-    // 2. Ask Gemini 1.5 Flash to pick the top 9
     const payload = results.map(r => ({
       id:      r.id,
       rating:  r.rating,
@@ -110,7 +104,6 @@ ${JSON.stringify(payload)}`;
     const geminiData = await geminiRes.json();
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "[]";
 
-    // 3. Parse the IDs Gemini returned
     let topIds;
     try {
       topIds = JSON.parse(rawText.replace(/```json|```/g, "").trim());
@@ -118,13 +111,11 @@ ${JSON.stringify(payload)}`;
       topIds = [];
     }
 
-    // 4. Map IDs back to full review objects in Gemini's ranked order
     let topReviews = topIds
       .map(id => results.find(r => r.id === id))
       .filter(Boolean)
       .slice(0, 9);
 
-    // Fallback: if Gemini returned bad/missing IDs, sort by rating
     if (topReviews.length < 9) {
       topReviews = [...results]
         .sort((a, b) => b.rating - a.rating)
@@ -133,13 +124,12 @@ ${JSON.stringify(payload)}`;
 
     res.json({ reviews: topReviews });
   } catch (err) {
-    // Final fallback: rating-sorted query straight from MongoDB
     try {
       const fallback = await CV.aggregate([
-  { $unwind: "$reviews" },
-  { $match: { "reviews.rating": { $gte: 4 } } },  // ← add this line
-  { $sort: { "reviews.rating": -1, "reviews.createdAt": -1 } },
-  { $limit: 9 },
+        { $unwind: "$reviews" },
+        { $match: { "reviews.rating": { $gte: 4 } } },
+        { $sort: { "reviews.rating": -1, "reviews.createdAt": -1 } },
+        { $limit: 9 },
         {
           $project: {
             _id: 0,
@@ -200,6 +190,17 @@ router.put("/:id/experience", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// PUT /api/cv/:id/projects ← NEW
+router.put("/:id/projects", async (req, res, next) => {
+  try {
+    const cv = await findCV(req.params.id, res);
+    if (!cv) return;
+    cv.projects = req.body;
+    await cv.save();
+    res.json({ ok: true, total: cv.projects.length });
+  } catch (err) { next(err); }
+});
+
 // PUT /api/cv/:id/skills
 router.put("/:id/skills", async (req, res, next) => {
   try {
@@ -236,7 +237,13 @@ router.get("/:id/skill-suggestions", async (req, res, next) => {
         return `${e.position || "Role"} at ${e.company || "Company"} (${e.employmentType || ""}) | ${duration}${desc}`;
       }).join("\n");
 
-    if (!eduLines && !expLines) return res.json({ suggestions: [] });
+    // Also factor in projects for richer skill suggestions
+    const projLines = (cv.projects || [])
+      .filter((p) => p.title || p.techStack)
+      .map((p) => `${p.title || "Project"}: ${p.techStack || ""}${p.description ? " — " + p.description : ""}`)
+      .join("\n");
+
+    if (!eduLines && !expLines && !projLines) return res.json({ suggestions: [] });
 
     const prompt = `You are a professional CV writer. Based on the candidate's background below, suggest exactly 10 relevant professional skills suitable for their CV.
 
@@ -246,10 +253,14 @@ ${eduLines || "Not provided"}
 --- Work Experience ---
 ${expLines || "Not provided"}
 
+--- Projects ---
+${projLines || "Not provided"}
+
 Rules:
 - Return ONLY a valid JSON array of 10 short skill strings (1–4 words each).
 - No markdown, no explanation, no extra text — just the raw JSON array.
 - Include a mix of technical and soft skills relevant to their background.
+- If IT related, must return programming languages and tools.
 
 Example output format: ["JavaScript", "Team Leadership", "Data Analysis"]`;
 
@@ -294,6 +305,11 @@ router.get("/:id/generate-summary", async (req, res, next) => {
         return `${e.position || "Role"} at ${e.company || "Company"} (${duration})${e.description ? ": " + e.description : ""}`;
       }).join("; ");
 
+    const projLines = (cv.projects || [])
+      .filter((p) => p.title)
+      .map((p) => `${p.title}${p.techStack ? " (" + p.techStack + ")" : ""}`)
+      .join(", ");
+
     const skillsLine = (cv.skills || []).join(", ");
 
     const prompt = `You are a professional CV writer. Write a compelling professional summary for a CV based on the candidate's details below.
@@ -301,6 +317,7 @@ router.get("/:id/generate-summary", async (req, res, next) => {
 Name: ${name}
 Education: ${eduLines || "Not provided"}
 Experience: ${expLines || "Not provided"}
+Projects: ${projLines || "Not provided"}
 Skills: ${skillsLine || "Not provided"}
 
 Rules:
@@ -310,6 +327,7 @@ Rules:
 - Highlight their strongest points
 - Return plain text only — no markdown, no bullet points, no headings
 - Do not start with "I"
+- Do not emphasize gender (NO words like he/she/his/her/they/them or any kind of person addressing)
 - Maximum characters including spaces 590`;
 
     const completion = await openai.chat.completions.create({

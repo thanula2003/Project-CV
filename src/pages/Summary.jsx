@@ -1,3 +1,5 @@
+// Summary.jsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveSummary, generateSummary } from "../api";
@@ -13,11 +15,14 @@ const STEPS = [
 
 function StepProgress({ current }) {
   return (
-    <div className="step-progress">
+    <div
+      className="step-progress"
+      style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 4 }}
+    >
       {STEPS.map((step, i) => {
         const status = i < current ? "done" : i === current ? "active" : "";
         return (
-          <div key={i} className="step-item">
+          <div key={i} className="step-item" style={{ flexShrink: 0 }}>
             <div className={`step-dot ${status}`}>
               {status === "done" ? "✓" : i + 1}
             </div>
@@ -53,7 +58,7 @@ function Summary() {
   const [generated, setGenerated] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
-  const MAX_CHARS = 600;
+  const MAX_CHARS = 1000;
 
   const handleGenerate = async () => {
     const id = getCVId();
@@ -87,7 +92,7 @@ function Summary() {
     setError("");
     try {
       await saveSummary(id, summary);
-      navigate("/template-select"); // ← changed from /view
+      navigate("/template-select");
     } catch (err) {
       setError(err.message);
       setSaving(false);
@@ -109,9 +114,12 @@ function Summary() {
         </div>
 
         <div className="card">
-          {/* AI Generate button */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-            <div>
+          {/* AI Generate header row — stack on narrow screens */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 20, flexWrap: "wrap", gap: 12,
+          }}>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-h)", marginBottom: 4 }}>
                 {generated ? "AI Generated Summary" : "Generate with AI"}
               </div>
@@ -147,15 +155,22 @@ function Summary() {
 
           <div className="section-divider" />
 
-          {/* Text area */}
+          {/* Textarea */}
           <div style={{ marginTop: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--text-muted)" }}>
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6,
+            }}>
+              <label style={{
+                fontSize: 12, fontWeight: 600, letterSpacing: "0.05em",
+                textTransform: "uppercase", color: "var(--text-muted)",
+              }}>
                 Your Summary
               </label>
               <span style={{
                 fontSize: 12,
                 color: charCount > MAX_CHARS * 0.9 ? "var(--danger)" : "var(--text-muted)",
+                flexShrink: 0,
               }}>
                 {charCount} / {MAX_CHARS}
               </span>
@@ -191,20 +206,7 @@ function Summary() {
             />
 
             {/* Tips */}
-            {!summary && !generating && (
-              <div style={{
-                marginTop: 12,
-                padding: "12px 16px",
-                background: "var(--surface-2)",
-                borderRadius: "var(--radius-sm)",
-                fontSize: 13,
-                color: "var(--text-muted)",
-                lineHeight: 1.6,
-              }}>
-                💡 <strong style={{ color: "var(--text-h)" }}>Tips:</strong> Keep it to 3–4 sentences.
-                Mention your field, years of experience, key strengths, and what you're looking for.
-              </div>
-            )}
+            
           </div>
 
           {error && (
@@ -220,9 +222,17 @@ function Summary() {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate("/skills")}>
+        {/* Nav actions — stack on mobile */}
+        <div
+          className="form-actions"
+          style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}
+        >
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => navigate("/skills")}
+            style={{ flex: "1 1 auto", maxWidth: 120, justifyContent: "center" }}
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -233,9 +243,14 @@ function Summary() {
             className="btn-primary"
             onClick={handleDone}
             disabled={saving || !summary.trim()}
-            style={{ minWidth: 120 }}
+            style={{ flex: "1 1 auto", maxWidth: 220, justifyContent: "center" }}
           >
-            {saving ? "Saving…" : "Next →"}
+            {saving ? "Saving…" : "Next: Choose Template"}
+            {!saving && (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
