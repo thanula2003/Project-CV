@@ -69,6 +69,12 @@ const ChevronIcon = ({ open }) => (
     <path d="M3 5.5l4.5 4.5L12 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const PageIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+    <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+    <path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+);
 
 // ── Helpers ────────────────────────────────────────────────────
 function formatDate(month, year) {
@@ -92,7 +98,7 @@ function formatProjectDateRange(proj) {
 const A4_W = 794;
 const A4_H = 1123;
 
-// ── Template style definitions (unchanged) ─────────────────────
+// ── Template style definitions ─────────────────────────────────
 const TEMPLATE_STYLES = {
   classic: {
     wrap: { fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: 11, lineHeight: 1.6, color: "#2d2926", background: "#fff", padding: "40px 48px", width: "100%", boxSizing: "border-box" },
@@ -149,6 +155,11 @@ const TEMPLATE_META = {
   modern:    { label: "Modern",    accent: "#2563eb", badge: "ATS Friendly" },
   minimal:   { label: "Minimal",   accent: "#555",    badge: null },
   executive: { label: "Executive", accent: "#b8960c", badge: "Premium" },
+};
+
+const PAGE_MODE_META = {
+  auto:   { label: "Multi-page",  desc: "Content flows across pages",  icon: "∞" },
+  "1page": { label: "1 Page",      desc: "Scaled to fit one A4 sheet",   icon: "1" },
 };
 
 // ── CV Document ────────────────────────────────────────────────
@@ -323,6 +334,7 @@ function CVDocument({ cv, template }) {
 function ScaledA4({ cv, template, outerRef, watermarkRef }) {
   const containerRef = useRef();
   const [scale, setScale] = useState(1);
+  const [naturalHeight, setNaturalHeight] = useState(0);
   const [ready, setReady] = useState(false);
   const [containerWidth, setContainerWidth] = useState(A4_W);
 
@@ -340,51 +352,138 @@ function ScaledA4({ cv, template, outerRef, watermarkRef }) {
     const id = requestAnimationFrame(() => {
       const scaleW = containerWidth < A4_W ? containerWidth / A4_W : 1;
       setScale(scaleW);
+
+      if (outerRef.current) {
+        setNaturalHeight(outerRef.current.scrollHeight);
+      }
+
       setReady(true);
     });
     return () => cancelAnimationFrame(id);
   }, [cv, template, containerWidth]);
 
-  // Natural content height × scale = visible height
+  // How many px of empty space the scale transform leaves below the content
+  const excessHeight = naturalHeight > 0 ? naturalHeight * (1 - scale) : 0;
   const scaledWidth  = A4_W * scale;
-  // We don't know content height until render; let it be auto (no clip)
+
   return (
     <div ref={containerRef} style={{ width: "100%" }}>
-      {/* Outer ref is what html2pdf captures — full A4 width, natural height, no transform */}
-      <div
-        ref={outerRef}
-        style={{
-          position: "relative",
-          width: A4_W,
-          // NO fixed height, NO overflow:hidden → content grows freely
-          background: "#fff",
-          margin: "0 auto",
-          // Hide until we know the scale; avoids flash
-          opacity: ready ? 1 : 0,
-          transition: "opacity 0.2s ease",
-          // Scale down visually for the preview (transform doesn't affect layout)
-          transformOrigin: "top left",
-          transform: `scale(${scale})`,
-          // Compensate width so the parent sees the correct visual footprint
-          marginRight: `${-(A4_W - scaledWidth)}px`,
-        }}
-      >
-        <CVDocument cv={cv} template={template} />
+      <div style={{ position: "relative" }}>
         <div
-          ref={watermarkRef}
+          ref={outerRef}
           style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='260'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' transform='rotate(-35 260 130)' font-family='Georgia%2C serif' font-size='28' font-weight='700' fill='rgba(220%2C38%2C38%2C0.13)' letter-spacing='2'%3EDOWNLOAD FOR WATERMARK-FREE PDF%3C/text%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat", backgroundSize: "520px 260px",
+            position: "relative",          // ← stays relative so html2pdf sees it
+            width: A4_W,
+            background: "#fff",
+            opacity: ready ? 1 : 0,
+            transition: "opacity 0.2s ease",
+            transformOrigin: "top left",
+            transform: `scale(${scale})`,
+            // Pull left: reclaim the rightward overflow
+            marginRight: `${-(A4_W - scaledWidth)}px`,
+            // Pull up: reclaim the downward overflow left by the scale shrink
+            marginBottom: ready && excessHeight > 0 ? `-${excessHeight}px` : 0,
           }}
         >
-          <div style={{ transform: "rotate(-32deg)", textAlign: "center", padding: "18px 36px", border: "4px solid rgba(220,38,38,0.22)", borderRadius: 6, background: "rgba(255,255,255,0.55)", backdropFilter: "blur(1px)", userSelect: "none" }}>
-            <div style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 800, color: "rgba(185,28,28,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1.3 }}>Download for</div>
-            <div style={{ fontFamily: "'Georgia', serif", fontSize: 15, fontWeight: 700, color: "rgba(185,28,28,0.45)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 4 }}>Watermark-Free PDF</div>
+          <CVDocument cv={cv} template={template} />
+
+          {/* Watermark */}
+          <div
+            ref={watermarkRef}
+            style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='260'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' transform='rotate(-35 260 130)' font-family='Georgia%2C serif' font-size='28' font-weight='700' fill='rgba(220%2C38%2C38%2C0.13)' letter-spacing='2'%3EDOWNLOAD FOR WATERMARK-FREE PDF%3C/text%3E%3C/svg%3E")`,
+              backgroundRepeat: "repeat", backgroundSize: "520px 260px",
+            }}
+          >
+            <div style={{ transform: "rotate(-32deg)", textAlign: "center", padding: "18px 36px", border: "4px solid rgba(220,38,38,0.22)", borderRadius: 6, background: "rgba(255,255,255,0.55)", backdropFilter: "blur(1px)", userSelect: "none" }}>
+              <div style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 800, color: "rgba(185,28,28,0.55)", letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1.3 }}>Download for</div>
+              <div style={{ fontFamily: "'Georgia', serif", fontSize: 15, fontWeight: 700, color: "rgba(185,28,28,0.45)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 4 }}>Watermark-Free PDF</div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Page Mode Picker (reusable) ────────────────────────────────
+function PageModePicker({ pageMode, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      {Object.entries(PAGE_MODE_META).map(([id, meta]) => {
+        const active = pageMode === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onChange(id)}
+            style={{
+              flex: 1,
+              border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+              borderRadius: "var(--radius-sm)",
+              background: active ? "var(--accent-bg)" : "var(--surface-2)",
+              cursor: "pointer",
+              padding: "9px 8px 8px",
+              textAlign: "center",
+              transition: "all 0.15s ease",
+              outline: "none",
+              position: "relative",
+            }}
+          >
+            {/* Page count badge */}
+            <div style={{
+              width: 26, height: 26,
+              borderRadius: 6,
+              background: active ? "var(--accent)" : "var(--border)",
+              color: active ? "#fff" : "var(--text-muted)",
+              fontWeight: 700,
+              fontSize: 13,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 5px",
+              transition: "all 0.15s",
+            }}>
+              {meta.icon}
+            </div>
+            <span style={{ display: "block", fontSize: 12, fontWeight: 600, color: active ? "var(--accent)" : "var(--text-h)" }}>
+              {meta.label}
+            </span>
+            <span style={{ display: "block", fontSize: 10, color: "var(--text-muted)", marginTop: 1, lineHeight: 1.3 }}>
+              {meta.desc}
+            </span>
+            {/* Active checkmark */}
+            {active && (
+              <div style={{
+                position: "absolute", top: 6, right: 6,
+                width: 14, height: 14, borderRadius: "50%",
+                background: "var(--accent)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="8" height="8" viewBox="0 0 9 9" fill="none">
+                  <path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Page mode hint ─────────────────────────────────────────────
+function PageModeHint({ pageMode }) {
+  if (pageMode === "auto") return (
+    <div style={{ display: "flex", gap: 7, padding: "8px 10px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 11, color: "var(--text-muted)", lineHeight: 1.5, marginTop: 10 }}>
+      <span style={{ flexShrink: 0 }}>📄</span>
+      <span>Content flows naturally across as many pages as needed.</span>
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", gap: 7, padding: "8px 10px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "var(--radius-sm)", fontSize: 11, color: "#92400e", lineHeight: 1.5, marginTop: 10 }}>
+      <span style={{ flexShrink: 0 }}>⚠️</span>
+      <span><strong>1-page mode</strong> shrinks content to fit one A4 sheet. Best for concise CVs — if heavily scaled down, consider <em>Multi-page</em> instead.</span>
     </div>
   );
 }
@@ -489,13 +588,14 @@ function ReviewForm({ cvId }) {
 // ── Main Page ──────────────────────────────────────────────────
 function CVView() {
   const navigate = useNavigate();
-  const cvRef = useRef();
+  const cvRef      = useRef();
   const watermarkRef = useRef();
   const [cv, setCv]             = useState(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
   const [exporting, setExporting] = useState(false);
   const [template, setTemplate] = useState(() => localStorage.getItem("cv_template") || "classic");
+  const [pageMode, setPageMode] = useState(() => localStorage.getItem("cv_page_mode") || "auto");
   const [reviewOpen, setReviewOpen] = useState(false);
 
   useEffect(() => {
@@ -505,70 +605,114 @@ function CVView() {
   }, []);
 
   const handleTemplateChange = (tpl) => { setTemplate(tpl); localStorage.setItem("cv_template", tpl); };
+  const handlePageModeChange = (mode) => { setPageMode(mode); localStorage.setItem("cv_page_mode", mode); };
 
-  // In handleDownload, replace the html2pdf call section:
-
-const handleDownload = async () => {
-  if (!cvRef.current) return;
-  setExporting(true);
-  if (watermarkRef.current) watermarkRef.current.style.display = "none";
-
-  // Inject a @page style so page 2+ get top/bottom breathing room
-  const pageStyle = document.createElement("style");
-  pageStyle.id = "__cv-page-style__";
-  pageStyle.textContent = `@page { margin: 18mm 0 18mm; }`;
-  document.head.appendChild(pageStyle);
-
-  try {
-    const name = cv?.personalInfo?.fullName?.replace(/\s+/g, "_") || "CV";
+  const handleDownload = async () => {
+    if (!cvRef.current) return;
+    setExporting(true);
+    if (watermarkRef.current) watermarkRef.current.style.display = "none";
 
     const el = cvRef.current;
-    const prevTransform       = el.style.transform;
-    const prevTransformOrigin = el.style.transformOrigin;
-    const prevOpacity         = el.style.opacity;
-    const prevMarginRight     = el.style.marginRight;
-    el.style.transform        = "none";
-    el.style.transformOrigin  = "top left";
-    el.style.opacity          = "1";
-    el.style.marginRight      = "0";
+    const name = cv?.personalInfo?.fullName?.replace(/\s+/g, "_") || "CV";
 
-    await html2pdf()
-      .set({
-        margin: [18, 0, 18, 0],   // top, right, bottom, left  — in mm
-        filename: `${name}_CV.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          width: A4_W,
-          windowWidth: A4_W,
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-      })
-      .from(el)
-      .save();
+    // Reset any preview transform so html2canvas sees the element at true A4_W
+    const prev = {
+      transform: el.style.transform,
+      transformOrigin: el.style.transformOrigin,
+      opacity: el.style.opacity,
+      marginRight: el.style.marginRight,
+    };
+    el.style.transform       = "none";
+    el.style.transformOrigin = "top left";
+    el.style.opacity         = "1";
+    el.style.marginRight     = "0";
 
-    el.style.transform        = prevTransform;
-    el.style.transformOrigin  = prevTransformOrigin;
-    el.style.opacity          = prevOpacity;
-    el.style.marginRight      = prevMarginRight;
-  } catch (err) {
-    console.error(err);
-  } finally {
-    // Remove injected page style
-    const injected = document.getElementById("__cv-page-style__");
-    if (injected) injected.remove();
+    try {
+      if (pageMode === "1page") {
+        // ── Single-page PDF ────────────────────────────────────
+        // html2canvas ignores CSS transform — it captures at the real DOM size.
+        // We measure the natural full height, compute a fit-scale, then apply it
+        // inside onclone (the detached DOM copy html2canvas renders from).
+        // jsPDF page size is set to [A4_W × scaledHeight] so everything lands on
+        // exactly one page with no crops and no blank space.
+        const naturalH = el.scrollHeight;
+        const fitScale = naturalH > A4_H ? A4_H / naturalH : 1;
+        const scaledH  = Math.round(naturalH * fitScale);
 
-    if (watermarkRef.current) watermarkRef.current.style.display = "";
-    setExporting(false);
-  }
-};
+        await html2pdf()
+          .set({
+            margin: [0, 0, 0, 0],
+            filename: `${name}_CV.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              width: A4_W,
+              windowWidth: A4_W,
+              onclone: (_doc, clonedEl) => {
+                // Apply the shrink transform so the canvas captures scaled content
+                clonedEl.style.transform       = `scale(${fitScale})`;
+                clonedEl.style.transformOrigin = "top left";
+                clonedEl.style.width           = `${A4_W}px`;
+                // Collapse the extra whitespace the scale leaves behind
+                clonedEl.style.marginBottom    = `-${naturalH * (1 - fitScale)}px`;
+              },
+            },
+            jsPDF: {
+              unit: "px",
+              // Page is exactly as wide as A4 and as tall as the scaled content
+              format: [A4_W, scaledH],
+              orientation: "portrait",
+            },
+            pagebreak: { mode: [] },
+          })
+          .from(el)
+          .save();
+
+      } else {
+        // ── Multi-page PDF (unchanged) ─────────────────────────
+        const pageStyle = document.createElement("style");
+        pageStyle.id = "__cv-page-style__";
+        pageStyle.textContent = "@page { margin: 18mm 0 18mm; }";
+        document.head.appendChild(pageStyle);
+
+        await html2pdf()
+          .set({
+            margin: [18, 0, 18, 0],
+            filename: `${name}_CV.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              width: A4_W,
+              windowWidth: A4_W,
+            },
+            jsPDF: {
+              unit: "mm",
+              format: "a4",
+              orientation: "portrait",
+            },
+            pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+          })
+          .from(el)
+          .save();
+
+        document.getElementById("__cv-page-style__")?.remove();
+      }
+    } catch (err) {
+      console.error("PDF export error:", err);
+    } finally {
+      // Always restore the element's visual state
+      el.style.transform       = prev.transform;
+      el.style.transformOrigin = prev.transformOrigin;
+      el.style.opacity         = prev.opacity;
+      el.style.marginRight     = prev.marginRight;
+      if (watermarkRef.current) watermarkRef.current.style.display = "";
+      setExporting(false);
+    }
+  };
 
   // ── Loading ──────────────────────────────────────────────────
   if (loading) return (
@@ -593,7 +737,7 @@ const handleDownload = async () => {
 
   const currentMeta = TEMPLATE_META[template];
 
-  // ── Desktop two-panel layout ─────────────────────────────────
+  // ── Layout ───────────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100svh", background: "var(--surface-2)" }}>
       <style>{`
@@ -716,7 +860,7 @@ const handleDownload = async () => {
           display: block;
         }
 
-        /* Review collapsible in sidebar (desktop only) */
+        /* Review collapsible */
         .review-toggle {
           width: 100%;
           display: flex;
@@ -744,32 +888,23 @@ const handleDownload = async () => {
           animation: fadeUp 0.4s 0.1s ease both;
         }
 
-        /* ─────────────────────────────────────────────────────
-           Mobile layout — everything stacked vertically
-           Order: template picker → CV preview → buttons → review
-        ───────────────────────────────────────────────────── */
+        /* ─── Mobile layout ─── */
         @media (max-width: 860px) {
-          /* Stack layout */
           .cvview-layout { flex-direction: column; }
-
-          /* Hide the sidebar entirely on mobile */
           .cvview-sidebar { display: none; }
-
-          /* Canvas becomes the full-width scroll container */
           .cvview-canvas {
             padding: 0 0 48px;
             background: var(--surface-2);
             align-items: stretch;
           }
 
-          /* ── 1. Template strip ── */
+          /* Template + page mode strip */
           .mobile-template-strip {
             display: block;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
             padding: 14px 16px;
           }
-
           .mobile-template-strip .strip-label {
             font-size: 10px;
             font-weight: 700;
@@ -779,18 +914,15 @@ const handleDownload = async () => {
             margin-bottom: 10px;
             display: block;
           }
-
           .mobile-template-strip .template-grid {
             grid-template-columns: repeat(4, 1fr);
             gap: 7px;
           }
 
-          /* ── 2. CV preview ── */
           .mobile-cv-area {
             display: block;
             padding: 16px 12px 12px;
           }
-
           .mobile-cv-area .mobile-watermark-pill {
             display: inline-flex;
             align-items: center;
@@ -804,21 +936,18 @@ const handleDownload = async () => {
             margin-bottom: 10px;
           }
 
-          /* ── 3. Action buttons ── */
           .mobile-actions {
             display: flex;
             flex-direction: column;
             gap: 8px;
             padding: 0 16px 4px;
           }
-
           .mobile-actions .btn-primary,
           .mobile-actions .btn-secondary {
             width: 100%;
             justify-content: center;
           }
 
-          /* ── 4. Info notices ── */
           .mobile-notices {
             padding: 12px 16px 0;
             display: flex;
@@ -826,7 +955,6 @@ const handleDownload = async () => {
             gap: 8px;
           }
 
-          /* ── 5. Review section ── */
           .mobile-review {
             display: block;
             margin: 16px 16px 0;
@@ -835,35 +963,27 @@ const handleDownload = async () => {
             border-radius: var(--radius);
             overflow: hidden;
           }
-
           .mobile-review-header {
             padding: 14px 16px;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
           }
-
           .mobile-review-title {
             font-size: 14px;
             font-weight: 700;
             color: var(--text-h);
             margin: 0 0 2px;
           }
-
           .mobile-review-subtitle {
             font-size: 12px;
             color: var(--text-muted);
             margin: 0;
           }
+          .mobile-review-body { padding: 16px; }
 
-          .mobile-review-body {
-            padding: 16px;
-          }
-
-          /* Hide desktop-only watermark pill on mobile */
           .cvview-canvas > .watermark-pill { display: none; }
         }
 
-        /* Narrower phones: 2-col template grid */
         @media (max-width: 440px) {
           .mobile-template-strip .template-grid {
             grid-template-columns: 1fr 1fr;
@@ -919,6 +1039,13 @@ const handleDownload = async () => {
             </div>
           </div>
 
+          {/* ── Page mode picker (desktop) ── */}
+          <div className="sidebar-section">
+            <span className="sidebar-label">Page Count</span>
+            <PageModePicker pageMode={pageMode} onChange={handlePageModeChange} />
+            <PageModeHint pageMode={pageMode} />
+          </div>
+
           {/* Actions */}
           <div className="sidebar-section">
             <span className="sidebar-label">Actions</span>
@@ -931,10 +1058,6 @@ const handleDownload = async () => {
                   <><DownloadIcon />Download PDF</>
                 )}
               </button>
-              {/* <button type="button" className="btn-secondary" onClick={() => navigate("/summary")}
-                style={{ width: "100%", justifyContent: "center" }}>
-                <EditIcon /> Edit CV
-              </button> */}
             </div>
           </div>
 
@@ -954,7 +1077,7 @@ const handleDownload = async () => {
             </div>
           </div>
 
-          {/* Review (collapsible — desktop sidebar) */}
+          {/* Review (collapsible) */}
           <div className="sidebar-section" style={{ flex: 1 }}>
             <button className="review-toggle" onClick={() => setReviewOpen((o) => !o)}>
               <span className="sidebar-label" style={{ margin: 0 }}>Leave a Review</span>
@@ -971,15 +1094,15 @@ const handleDownload = async () => {
         {/* ══ RIGHT CANVAS ══════════════════════════════════════ */}
         <main className="cvview-canvas">
 
-          {/* Desktop watermark pill (hidden on mobile via CSS) */}
+          {/* Desktop watermark pill */}
           <div className="watermark-pill">
             <LockIcon />
             Preview — watermarked
           </div>
 
-          {/* ── MOBILE-ONLY CONTENT (hidden on desktop via CSS) ── */}
+          {/* ── MOBILE-ONLY CONTENT ── */}
 
-          {/* 1. Template strip */}
+          {/* 1. Template + page mode strip */}
           <div className="mobile-template-strip">
             <span className="strip-label">Template</span>
             <div className="template-grid">
@@ -1000,6 +1123,13 @@ const handleDownload = async () => {
                   </div>
                 </button>
               ))}
+            </div>
+
+            {/* Page mode picker — mobile */}
+            <div style={{ marginTop: 14 }}>
+              <span className="strip-label">Page Count</span>
+              <PageModePicker pageMode={pageMode} onChange={handlePageModeChange} />
+              <PageModeHint pageMode={pageMode} />
             </div>
           </div>
 
@@ -1031,10 +1161,6 @@ const handleDownload = async () => {
                 <><DownloadIcon />Download PDF</>
               )}
             </button>
-            {/* <button type="button" className="btn-secondary" onClick={() => navigate("/summary")}
-              style={{ width: "100%", justifyContent: "center" }}>
-              <EditIcon /> Edit CV
-            </button> */}
           </div>
 
           {/* 4. Info notices */}
@@ -1049,7 +1175,7 @@ const handleDownload = async () => {
             </div>
           </div>
 
-          {/* 5. Leave a Review — always visible on mobile */}
+          {/* 5. Leave a Review */}
           <div className="mobile-review">
             <div className="mobile-review-header">
               <p className="mobile-review-title">Leave a Review</p>
@@ -1060,7 +1186,7 @@ const handleDownload = async () => {
             </div>
           </div>
 
-          {/* ── Desktop CV paper (visible on desktop, sits after watermark pill) ── */}
+          {/* ── Desktop CV paper ── */}
           <div className="cv-paper-shadow desktop-cv-paper" style={{ width: "100%" }}>
             {cv && (
               <ScaledA4
@@ -1076,7 +1202,6 @@ const handleDownload = async () => {
       </div>
 
       <style>{`
-        /* On desktop: hide the mobile-only blocks */
         @media (min-width: 861px) {
           .mobile-template-strip,
           .mobile-cv-area,
@@ -1084,7 +1209,6 @@ const handleDownload = async () => {
           .mobile-notices,
           .mobile-review { display: none !important; }
         }
-        /* On mobile: hide the desktop CV paper */
         @media (max-width: 860px) {
           .desktop-cv-paper { display: none !important; }
         }
