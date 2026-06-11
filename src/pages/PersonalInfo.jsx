@@ -372,7 +372,7 @@ function PersonalInfo() {
               <label>Full Name *</label>
               <input
                 type="text"
-                placeholder="e.g. Alexandra Chen"
+                placeholder=""
                 value={form.fullName}
                 onChange={(e) => setField("fullName", e.target.value)}
               />
