@@ -158,7 +158,7 @@ const TEMPLATE_META = {
 };
 
 const PAGE_MODE_META = {
-  auto:   { label: "Multi-page",  desc: "Content flows across pages",  icon: "∞" },
+  auto:   { label: "Multi-page for large CVs",  desc: "Content flows across pages",  icon: "∞" },
   "1page": { label: "1 Page",      desc: "Scaled to fit one A4 sheet",   icon: "1" },
 };
 
@@ -603,6 +603,15 @@ function CVView() {
     if (!id) { setError("No CV session found."); setLoading(false); return; }
     getCV(id).then(setCv).catch((err) => setError(err.message)).finally(() => setLoading(false));
   }, []);
+
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 860);
+
+useEffect(() => {
+  const mq = window.matchMedia("(max-width: 860px)");
+  const handler = (e) => setIsMobile(e.matches);
+  mq.addEventListener("change", handler);
+  return () => mq.removeEventListener("change", handler);
+}, []);
 
   const handleTemplateChange = (tpl) => { setTemplate(tpl); localStorage.setItem("cv_template", tpl); };
   const handlePageModeChange = (mode) => { setPageMode(mode); localStorage.setItem("cv_page_mode", mode); };
@@ -1134,22 +1143,22 @@ function CVView() {
           </div>
 
           {/* 2. CV preview */}
-          <div className="mobile-cv-area">
-            <div className="mobile-watermark-pill">
-              <LockIcon />
-              Preview — watermarked
-            </div>
-            <div className="cv-paper-shadow" style={{ width: "100%" }}>
-              {cv && (
-                <ScaledA4
-                  cv={cv}
-                  template={template}
-                  outerRef={cvRef}
-                  watermarkRef={watermarkRef}
-                />
-              )}
-            </div>
+        <div className="mobile-cv-area">
+          <div className="mobile-watermark-pill">
+            <LockIcon />
+            Preview — watermarked
           </div>
+          <div className="cv-paper-shadow" style={{ width: "100%" }}>
+            {cv && (
+              <ScaledA4
+                cv={cv}
+                template={template}
+                outerRef={cvRef}
+                watermarkRef={watermarkRef}
+              />
+            )}
+          </div>
+        </div>
 
           {/* 3. Action buttons */}
           <div className="mobile-actions">
@@ -1187,16 +1196,18 @@ function CVView() {
           </div>
 
           {/* ── Desktop CV paper ── */}
-          <div className="cv-paper-shadow desktop-cv-paper" style={{ width: "100%" }}>
-            {cv && (
-              <ScaledA4
-                cv={cv}
-                template={template}
-                outerRef={cvRef}
-                watermarkRef={watermarkRef}
-              />
-            )}
-          </div>
+          {!isMobile && (
+            <div className="cv-paper-shadow desktop-cv-paper" style={{ width: "100%" }}>
+              {cv && (
+                <ScaledA4
+                  cv={cv}
+                  template={template}
+                  outerRef={cvRef}
+                  watermarkRef={watermarkRef}
+                />
+              )}
+            </div>
+          )}
 
         </main>
       </div>

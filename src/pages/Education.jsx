@@ -142,7 +142,7 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
               <label>Institution Name *</label>
               <input
                 type="text"
-                placeholder="e.g. University of Colombo"
+                placeholder="e.g. Your University name"
                 value={inst.institute}
                 onChange={(e) => set("institute", e.target.value)}
                 style={{ width: "100%" }}

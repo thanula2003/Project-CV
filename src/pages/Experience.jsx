@@ -173,7 +173,7 @@ function ExperienceCard({ entry, index, onUpdate, onRemove }) {
               <label>Job Title / Position *</label>
               <input
                 type="text"
-                placeholder="e.g. Software Engineer"
+                placeholder="e.g. Software Engineer/ Accountant"
                 value={entry.position}
                 onChange={(e) => set("position", e.target.value)}
                 style={{ width: "100%" }}
@@ -199,7 +199,7 @@ function ExperienceCard({ entry, index, onUpdate, onRemove }) {
               </label>
               <input
                 type="text"
-                placeholder="Colombo, Sri Lanka / Remote"
+                placeholder="New York, United States / Remote"
                 value={entry.location}
                 onChange={(e) => set("location", e.target.value)}
                 style={{ width: "100%" }}
