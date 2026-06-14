@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Must be first — before any other imports that read process.env
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, ".env") });
+console.log(process.env.PAYHERE_MERCHANT_ID);
+console.log(process.env.PAYHERE_MERCHANT_SECRET);
 
 import express from "express";
 import cors from "cors";
