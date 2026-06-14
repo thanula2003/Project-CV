@@ -1,12 +1,19 @@
 //backend/app.js
+import { fileURLToPath } from "url";
+import path from "path";
+import { createRequire } from "module";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Must be first — before any other imports that read process.env
+import dotenv from "dotenv";
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cvRoutes from "./src/routes/cv.js";
-
-dotenv.config();
+import paymentRoutes from "./src/routes/payment.js";
 
 const app = express();
 
@@ -32,6 +39,7 @@ mongoose
 
 // ── Routes ────────────────────────────────────────────────────
 app.use("/api/cv", cvRoutes);
+app.use("/api/payment", paymentRoutes);
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 

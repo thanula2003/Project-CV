@@ -1,7 +1,7 @@
 // CVView.jsx
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCVId, getCV, submitReview } from "../api";
+import { getCVId, getCV, submitReview, getPayhereHash } from "../api";
 import html2pdf from "html2pdf.js";
 
 // ── Icons ──────────────────────────────────────────────────────
@@ -75,6 +75,166 @@ const PageIcon = () => (
     <path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
   </svg>
 );
+
+// ── Policy Content ─────────────────────────────────────────────
+const POLICY_CONTENT = {
+  refund: {
+    title: "Refund Policy",
+    body: `Thank you for using our AI-Assisted CV Generator. This Refund Policy explains how refunds are handled for the watermark-free PDF download service.
+
+Nature of the Service
+
+The $0.30 payment unlocks a one-time, watermark-free PDF export of the CV you have created. This is a digital product delivered instantly upon successful payment.
+
+Refund Eligibility
+
+Because this is a digital product delivered immediately after payment, refunds are generally not available once the watermark-free PDF has been successfully generated and downloaded.
+
+However, we will provide a full refund if:
+
+- Your payment was completed successfully but the watermark-free PDF download failed to generate or deliver due to a technical error on our end.
+- You were charged more than once for the same download due to a duplicate transaction or system error.
+- You were incorrectly charged due to a pricing or currency conversion error.
+
+Non-Refundable Cases
+
+Refunds will not be issued for:
+
+- Dissatisfaction with the CV content, formatting, or template you personally selected and edited.
+- Change of mind after a successful download.
+- Errors in the information you entered into the CV builder.
+
+How to Request a Refund
+
+If you believe you are eligible for a refund, please contact our support team within 7 days of the transaction, providing your payment reference number and a description of the issue.
+
+Processing Time
+
+Approved refunds will be processed back to your original payment method within 7-14 business days, depending on your bank or card issuer's processing times.
+
+Contact Us
+
+thanula2019@gmail.com
++94 78 3736 983
+
+R.T.M.S.Rajapaksha
+Udagama, Baranadana road, Mawathagama, Sri Lanka
+`,
+  },
+  privacy: {
+    title: "Privacy Policy",
+    body: `This Privacy Policy explains how the AI-Assisted CV Generator collects, uses, and protects your personal information.
+
+Information We Collect
+
+When you use our CV builder, we may collect:
+
+- Personal details you enter into the CV form, such as your name, contact information, education, work experience, skills, and a profile photo (if uploaded).
+- Payment information processed during checkout, such as transaction reference numbers. We do not store full card details — these are handled securely by our payment gateway, PayHere.
+- Technical information such as your IP address and approximate location, used to determine the correct currency (USD or LKR) for pricing.
+- Optional review information, such as your name, star rating, and comments, if you choose to leave a review.
+
+How We Use Your Information
+
+We use the information you provide to:
+
+- Generate your CV document and AI-suggested content (such as skill suggestions and professional summaries).
+- Process your payment and deliver the watermark-free PDF.
+- Display your currency-appropriate price based on your approximate location.
+- Display ratings and reviews (your name and comments) to other users, if you submit a review.
+- Improve our service based on aggregated usage and feedback.
+
+Data Storage
+
+Your CV data is stored securely in our database for the duration needed to generate your document. We do not sell, rent, or trade your personal information to third parties.
+
+Third-Party Services
+
+We use the following third-party services, which may process limited data as part of their function:
+
+- PayHere — for secure payment processing.
+- AI service providers — to generate skill suggestions and summary text based on the information you provide.
+- IP geolocation services — to determine your currency for pricing purposes.
+
+Each of these providers has its own privacy practices governing the data they process.
+
+Cookies
+
+We may not use any local storage on your device for any purpose. This information are processed in your device and closed after the CV generation.
+
+Data Security
+
+We take reasonable technical measures to protect your information. However, no method of electronic storage or transmission is completely secure, and we cannot guarantee absolute security.
+
+Your Rights
+
+You may request the deletion of your CV data and any associated information by contacting us. Reviews submitted publicly may be subject to separate handling as outlined at the time of submission.
+
+Changes to This Policy
+
+We may update this Privacy Policy from time to time. Continued use of the service after changes are posted constitutes acceptance of the revised policy.
+
+Contact Us
+
+thanula2019@gmail.com
++94 78 3736 983
+
+R.T.M.S.Rajapaksha
+Udagama, Baranadana road, Mawathagama, Sri Lanka`,
+  },
+  terms: {
+    title: "Terms & Conditions",
+    body: `Welcome to the AI-Assisted CV Generator. By using this website and its services, you agree to the following Terms & Conditions. Please read them carefully.
+
+Use of the Service
+
+- This service allows you to create a CV using guided forms and AI-assisted suggestions for skills and professional summaries.
+- You must provide accurate information for the CV content you submit. We are not responsible for inaccuracies in the information you choose to enter.
+- You may not use this service for unlawful purposes, including submitting false credentials intended to deceive employers.
+
+AI-Generated Content
+
+- Skill suggestions and summary text generated by AI tools are provided as drafting assistance only. You are responsible for reviewing, editing, and verifying the accuracy of any AI-generated content before using it in your CV.
+- We do not guarantee that AI-generated content is free of errors or perfectly suited to your circumstances.
+
+Pricing and Payments
+
+- A one-time fee of $0.30 (or the equivalent in LKR, calculated using real-time exchange rates for users in Sri Lanka) is charged to download a watermark-free PDF of your CV.
+- Prices displayed are determined automatically based on your approximate location at the time of payment.
+- Payments are processed securely through PayHere. By making a payment, you authorize the charge of the displayed amount to your chosen payment method.
+- We reserve the right to change pricing at any time. Changes will not affect payments already completed.
+
+Free Preview
+
+- A watermarked preview of your CV is available free of charge. The watermark-free PDF download requires the one-time payment described above.
+
+Reviews
+
+- If you choose to submit a review, you agree that your name (or "Anonymous" if left blank), star rating, and comment may be displayed publicly on our website.
+- We reserve the right to moderate, remove, or decline to display reviews that are abusive, spam, or otherwise inappropriate.
+
+Intellectual Property
+
+- The CV content you create belongs to you. The design, templates, layout, and underlying software of this service belong to us and may not be copied, reproduced, or redistributed without permission.
+
+Limitation of Liability
+
+- This service is provided "as is" without warranties of any kind. We do not guarantee employment outcomes, interview results, or that your CV will be accepted by any particular employer or Applicant Tracking System (ATS).
+- To the maximum extent permitted by law, we shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of this service.
+
+Changes to These Terms
+
+- We may update these Terms & Conditions at any time. Continued use of the service after changes are posted constitutes acceptance of the revised terms.
+
+Contact Us
+
+thanula2019@gmail.com
++94 78 3736 983
+
+R.T.M.S.Rajapaksha
+Udagama, Baranadana road, Mawathagama, Sri Lanka`,
+  },
+};
 
 // ── Helpers ────────────────────────────────────────────────────
 function formatDate(month, year) {
@@ -585,6 +745,187 @@ function ReviewForm({ cvId }) {
   );
 }
 
+// ── Price Modal ────────────────────────────────────────────────
+function PriceModal({ onConfirm, onClose, processing, onOpenPolicy }) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.45)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "fadeIn 0.15s ease both",
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--surface)",
+          borderRadius: "var(--radius)",
+          border: "1px solid var(--border)",
+          width: "100%", maxWidth: 360,
+          padding: "28px 24px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+          animation: "fadeUp 0.2s ease both",
+          textAlign: "center",
+        }}
+      >
+        <div style={{
+          width: 48, height: 48, borderRadius: "50%",
+          background: "var(--accent-bg)", color: "var(--accent)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 14px", fontSize: 22,
+        }}>
+          <DownloadIcon />
+        </div>
+
+        <h3 style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700, color: "var(--text-h)" }}>
+          Pay to Download Your CV
+        </h3>
+        <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
+          Unlock a clean, watermark-free PDF for just $0.30.
+        </p>
+
+        <div style={{
+          fontSize: 32, fontWeight: 800, color: "var(--text-h)",
+          marginBottom: 20,
+        }}>
+          $0.30
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onConfirm}
+            disabled={processing}
+            style={{ width: "100%", justifyContent: "center" }}
+          >
+            {processing ? (
+              <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Processing…</>
+            ) : "Pay Now"}
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onClose}
+            disabled={processing}
+            style={{ width: "100%", justifyContent: "center" }}
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div style={{
+          marginTop: 18,
+          paddingTop: 14,
+          borderTop: "1px solid var(--border)",
+          fontSize: 11,
+          color: "var(--text-muted)",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "4px 10px",
+        }}>
+          <button type="button" onClick={() => onOpenPolicy("refund")} style={linkBtnStyle}>Refund Policy</button>
+          <span>·</span>
+          <button type="button" onClick={() => onOpenPolicy("privacy")} style={linkBtnStyle}>Privacy Policy</button>
+          <span>·</span>
+          <button type="button" onClick={() => onOpenPolicy("terms")} style={linkBtnStyle}>Terms & Conditions</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const linkBtnStyle = {
+  background: "none",
+  border: "none",
+  padding: 0,
+  color: "var(--text-muted)",
+  fontSize: 11,
+  textDecoration: "underline",
+  cursor: "pointer",
+  fontFamily: "inherit",
+};
+
+// ── Policy Modal ────────────────────────────────────────────────
+function PolicyModal({ policyKey, onClose }) {
+  const policy = POLICY_CONTENT[policyKey];
+  if (!policy) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 1100,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "fadeIn 0.15s ease both",
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--surface)",
+          borderRadius: "var(--radius)",
+          border: "1px solid var(--border)",
+          width: "100%", maxWidth: 560,
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.3)",
+          animation: "fadeUp 0.2s ease both",
+        }}
+      >
+        <div style={{
+          padding: "18px 22px",
+          borderBottom: "1px solid var(--border)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexShrink: 0,
+        }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-h)" }}>
+            {policy.title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--text-muted)", fontSize: 20, lineHeight: 1,
+              padding: 4, display: "flex",
+            }}
+            aria-label="Close"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3 3l12 12M15 3L3 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div style={{
+          padding: "18px 22px",
+          overflowY: "auto",
+          fontSize: 13,
+          lineHeight: 1.7,
+          color: "var(--text-h)",
+          whiteSpace: "pre-line",
+        }}>
+          {policy.body}
+        </div>
+
+        <div style={{ padding: "14px 22px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+          <button type="button" className="btn-primary" onClick={onClose} style={{ width: "100%", justifyContent: "center" }}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────
 function CVView() {
   const navigate = useNavigate();
@@ -597,6 +938,8 @@ function CVView() {
   const [template, setTemplate] = useState(() => localStorage.getItem("cv_template") || "classic");
   const [pageMode, setPageMode] = useState(() => localStorage.getItem("cv_page_mode") || "auto");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [activePolicy, setActivePolicy] = useState(null); // "refund" | "privacy" | "terms" | null
 
   useEffect(() => {
     const id = getCVId();
@@ -752,7 +1095,7 @@ useEffect(() => {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         /* ── Desktop two-panel ── */
         .cvview-layout {
           display: flex;
@@ -1059,14 +1402,14 @@ useEffect(() => {
           <div className="sidebar-section">
             <span className="sidebar-label">Actions</span>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button type="button" className="btn-primary" onClick={handleDownload} disabled={exporting}
-                style={{ width: "100%", justifyContent: "center" }}>
-                {exporting ? (
-                  <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
-                ) : (
-                  <><DownloadIcon />Download PDF</>
-                )}
-              </button>
+            <button type="button" className="btn-primary" onClick={() => setShowPriceModal(true)} disabled={exporting}
+            style={{ width: "100%", justifyContent: "center" }}>
+            {exporting ? (
+              <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
+            ) : (
+              <><DownloadIcon />Download PDF</>
+            )}
+          </button>
             </div>
           </div>
 
@@ -1162,14 +1505,14 @@ useEffect(() => {
 
           {/* 3. Action buttons */}
           <div className="mobile-actions">
-            <button type="button" className="btn-primary" onClick={handleDownload} disabled={exporting}
-              style={{ width: "100%", justifyContent: "center" }}>
-              {exporting ? (
-                <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
-              ) : (
-                <><DownloadIcon />Download PDF</>
-              )}
-            </button>
+          <button type="button" className="btn-primary" onClick={() => setShowPriceModal(true)} disabled={exporting}
+            style={{ width: "100%", justifyContent: "center" }}>
+            {exporting ? (
+              <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Exporting…</>
+            ) : (
+              <><DownloadIcon />Download PDF</>
+            )}
+          </button>
           </div>
 
           {/* 4. Info notices */}
@@ -1224,6 +1567,67 @@ useEffect(() => {
           .desktop-cv-paper { display: none !important; }
         }
       `}</style>
+
+{showPriceModal && (
+          <PriceModal
+            processing={exporting}
+            onClose={() => !exporting && setShowPriceModal(false)}
+            onOpenPolicy={(key) => setActivePolicy(key)}
+            onConfirm={async () => {
+              setExporting(true);
+              try {
+                const orderId = `${cv._id}-${Date.now()}`;
+                const currency = "USD";
+                const amount = 0.30;
+
+                const { hash, merchant_id, amount: amountFormatted } = await getPayhereHash(orderId, amount, currency);
+
+                const payment = {
+                  sandbox: true,
+                  merchant_id,
+                  return_url: window.location.href,
+                  cancel_url: window.location.href,
+                  order_id: orderId,
+                  items: "CV PDF Download",
+                  amount: amountFormatted,
+                  currency,
+                  hash,
+                  first_name: cv?.personalInfo?.fullName?.split(" ")[0] || "Customer",
+                  last_name: cv?.personalInfo?.fullName?.split(" ").slice(1).join(" ") || "User",
+                  email: cv?.personalInfo?.email || "test@example.com",
+                  phone: cv?.personalInfo?.phones?.[0] || "0771234567",
+                  address: cv?.personalInfo?.address || "N/A",
+                  city: "Colombo",
+                  country: "Sri Lanka",
+                };
+
+                window.payhere.onCompleted = function () {
+                  setShowPriceModal(false);
+                  handleDownload();
+                };
+                window.payhere.onDismissed = function () {
+                  setExporting(false);
+                };
+                window.payhere.onError = function (error) {
+                  console.error("Payment error:", error);
+                  setExporting(false);
+                };
+
+                window.payhere.startPayment(payment);
+              } catch (err) {
+                console.error(err);
+                setExporting(false);
+              }
+            }}
+          />
+        )}
+
+        {activePolicy && (
+          <PolicyModal
+            policyKey={activePolicy}
+            onClose={() => setActivePolicy(null)}
+          />
+        )}
     </div>
   );
 }

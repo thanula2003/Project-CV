@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCVId, saveProjects } from "../api";
+import { getCVId, saveProjects,suggestProjectDescription } from "../api";
 
 const STEPS = [
   { label: "Personal" },
@@ -128,6 +128,117 @@ function formatDateRange(entry) {
   const end = entry.isOngoing ? "Ongoing" : [entry.endMonth, entry.endYear].filter(Boolean).join(" ");
   if (start && end) return `${start} → ${end}`;
   return start || end || null;
+}
+
+function AiGlowButton({ onClick, disabled, loading, children }) {
+  return (
+    <>
+      <style>{`
+        .btn-ai-glow {
+          position: relative;
+          padding: 0;
+          border: none;
+          border-radius: var(--radius-sm, 8px);
+          background: transparent;
+          cursor: pointer;
+          isolation: isolate;
+        }
+        .btn-ai-glow::before {
+          content: "";
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+          background-size: 300% 300%;
+          animation: ai-glow-rotate 4s linear infinite;
+          z-index: 0;
+          filter: blur(6px);
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+        .btn-ai-glow::after {
+          content: "";
+          position: absolute;
+          inset: -1.5px;
+          border-radius: inherit;
+          background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+          background-size: 300% 300%;
+          animation: ai-glow-rotate 4s linear infinite;
+          z-index: 1;
+        }
+        .btn-ai-glow:hover::before { opacity: 1; filter: blur(10px); }
+        .btn-ai-glow.loading::before { opacity: 1; filter: blur(12px); animation-duration: 1.2s; }
+        .btn-ai-glow.loading::after { animation-duration: 1.2s; }
+        .btn-ai-glow:disabled { cursor: default; }
+        .btn-ai-glow:disabled:not(.loading)::before,
+        .btn-ai-glow:disabled:not(.loading)::after {
+          animation: none;
+          background: var(--border, #444);
+          opacity: 0.4;
+          filter: none;
+        }
+        .btn-ai-glow-inner {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 16px;
+          border-radius: inherit;
+          background: var(--surface, #1a1a1a);
+          color: var(--text, #fff);
+          font-size: 13px;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+        .btn-ai-glow:disabled:not(.loading) .btn-ai-glow-inner { color: var(--text-muted, #888); }
+        .btn-ai-glow.loading .btn-ai-glow-inner {
+          background: linear-gradient(
+            90deg,
+            var(--surface, #1a1a1a) 0%,
+            rgba(124,58,237,0.25) 50%,
+            var(--surface, #1a1a1a) 100%
+          );
+          background-size: 200% 100%;
+          animation: ai-shimmer 1.5s linear infinite;
+        }
+        .ai-spinner {
+          width: 13px;
+          height: 13px;
+          border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.25);
+          border-top-color: #00f0ff;
+          border-right-color: #7c3aed;
+          animation: ai-spin 0.7s linear infinite;
+          flex-shrink: 0;
+        }
+        @keyframes ai-glow-rotate {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes ai-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes ai-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+      <button
+        type="button"
+        className={`btn-ai-glow${loading ? " loading" : ""}`}
+        disabled={disabled}
+        onClick={onClick}
+      >
+        <span className="btn-ai-glow-inner">
+          {loading && <span className="ai-spinner" />}
+          {children}
+        </span>
+      </button>
+    </>
+  );
 }
 
 // ── Project Card ──────────────────────────────────────────────
@@ -349,20 +460,43 @@ function ProjectCard({ entry, index, onUpdate, onRemove }) {
           </div>
 
           {/* Description */}
-          <div style={{ marginTop: 16 }} className="field">
-            <label>
-              Project Description{" "}
-              <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)", textTransform: "none", letterSpacing: 0 }}>
-                optional
-              </span>
-            </label>
-            <textarea
-              placeholder={"• Built a full-stack CV builder with AI-powered content generation\n• Integrated PayHere payment gateway for premium PDF exports\n• Deployed on Hostinger with MongoDB Atlas as the database"}
-              value={entry.description}
-              onChange={(e) => set("description", e.target.value)}
-              style={{ minHeight: 110, width: "100%" }}
-            />
-          </div>
+            <div style={{ marginTop: 16 }} className="field">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                <label style={{ margin: 0 }}>
+                  Project Description{" "}
+                  <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)", textTransform: "none", letterSpacing: 0 }}>
+                    optional
+                  </span>
+                </label>
+                <AiGlowButton
+                    disabled={!entry.title || entry.suggesting}
+                    loading={entry.suggesting}
+                    onClick={async () => {
+                      const id = getCVId();
+                      if (!id) return;
+                      onUpdate({ ...entry, suggesting: true });
+                      try {
+                        const { description } = await suggestProjectDescription(id, {
+                          title: entry.title,
+                          projectType: entry.projectType,
+                          techStack: entry.techStack,
+                        });
+                        onUpdate({ ...entry, description, suggesting: false });
+                      } catch (err) {
+                        onUpdate({ ...entry, suggesting: false });
+                      }
+                    }}
+                  >
+                    {entry.suggesting ? "Generating…" : "✨ Suggest with AI (Free)"}
+                  </AiGlowButton>
+              </div>
+              <textarea
+                placeholder={"• Built a full-stack CV builder with AI-powered content generation\n• Integrated PayHere payment gateway for premium PDF exports\n• Deployed on Hostinger with MongoDB Atlas as the database"}
+                value={entry.description}
+                onChange={(e) => set("description", e.target.value)}
+                style={{ minHeight: 180, width: "100%", resize: "vertical", marginTop: 10 }}
+              />
+            </div>
         </div>
       )}
     </div>
@@ -387,7 +521,7 @@ function Projects() {
     setSaving(true);
     setError("");
     try {
-      const payload = entries.map(({ id: _id, open, showLinks, ...rest }) => rest);
+      const payload = entries.map(({ id: _id, open, showLinks, suggesting, ...rest }) => rest);
       await saveProjects(id, payload);
       navigate("/skills");
     } catch (err) {

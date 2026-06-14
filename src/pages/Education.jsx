@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCVId, saveEducation } from "../api";
+import { getCVId, saveEducation, suggestDescription} from "../api";
+
 
 const STEPS = [
   { label: "Personal" },
@@ -22,6 +23,13 @@ const QUALIFICATION_TYPES = [
   "Professional Qualification",
   "Other",
 ];
+
+const MONTHS = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
 function StepProgress({ current }) {
   return (
@@ -68,11 +76,39 @@ const MinusIcon = () => (
   </svg>
 );
 
+function MonthYearPicker({ label, month, year, onMonth, onYear, disabled }) {
+  return (
+    <div className="field" style={{ flex: "1 1 200px", minWidth: 0 }}>
+      <label>{label}</label>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+          opacity: disabled ? 0.4 : 1,
+          pointerEvents: disabled ? "none" : "auto",
+        }}
+      >
+        <select value={month} onChange={(e) => onMonth(e.target.value)} style={{ width: "100%", minWidth: 0 }}>
+          <option value="">Month</option>
+          {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <select value={year} onChange={(e) => onYear(e.target.value)} style={{ width: "100%", minWidth: 0 }}>
+          <option value="">Year</option>
+          {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function newInstitute() {
   return {
     id: Date.now() + Math.random(),
     institute: "", qualification: "", program: "", description: "",
-    gpa: "", showGpa: false,  // ← both
+    gpa: "", showGpa: false,
+    startMonth: "", startYear: "", endMonth: "", endYear: "",
+    isCurrent: false,
     subjects: [], open: true, showSubjects: false, showDescription: false,
   };
 }
@@ -91,9 +127,119 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
   const cardTitle = inst.institute || `Institution ${index + 1}`;
   const cardSub = [inst.qualification, inst.program].filter(Boolean).join(" · ");
 
+  function AiGlowButton({ onClick, disabled, loading, children }) {
+    return (
+      <>
+        <style>{`
+          .btn-ai-glow {
+            position: relative;
+            padding: 0;
+            border: none;
+            border-radius: var(--radius-sm, 8px);
+            background: transparent;
+            cursor: pointer;
+            isolation: isolate;
+          }
+          .btn-ai-glow::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+            background-size: 300% 300%;
+            animation: ai-glow-rotate 4s linear infinite;
+            z-index: 0;
+            filter: blur(6px);
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+          }
+          .btn-ai-glow::after {
+            content: "";
+            position: absolute;
+            inset: -1.5px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+            background-size: 300% 300%;
+            animation: ai-glow-rotate 4s linear infinite;
+            z-index: 1;
+          }
+          .btn-ai-glow:hover::before { opacity: 1; filter: blur(10px); }
+          .btn-ai-glow.loading::before { opacity: 1; filter: blur(12px); animation-duration: 1.2s; }
+          .btn-ai-glow.loading::after { animation-duration: 1.2s; }
+          .btn-ai-glow:disabled { cursor: default; }
+          .btn-ai-glow:disabled:not(.loading)::before,
+          .btn-ai-glow:disabled:not(.loading)::after {
+            animation: none;
+            background: var(--border, #444);
+            opacity: 0.4;
+            filter: none;
+          }
+          .btn-ai-glow-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: inherit;
+            background: var(--surface, #1a1a1a);
+            color: var(--text, #fff);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+          .btn-ai-glow:disabled:not(.loading) .btn-ai-glow-inner { color: var(--text-muted, #888); }
+          .btn-ai-glow.loading .btn-ai-glow-inner {
+            background: linear-gradient(
+              90deg,
+              var(--surface, #1a1a1a) 0%,
+              rgba(124,58,237,0.25) 50%,
+              var(--surface, #1a1a1a) 100%
+            );
+            background-size: 200% 100%;
+            animation: ai-shimmer 1.5s linear infinite;
+          }
+          .ai-spinner {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-top-color: #00f0ff;
+            border-right-color: #7c3aed;
+            animation: ai-spin 0.7s linear infinite;
+            flex-shrink: 0;
+          }
+          @keyframes ai-glow-rotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          @keyframes ai-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+          @keyframes ai-spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+        <button
+          type="button"
+          className={`btn-ai-glow${loading ? " loading" : ""}`}
+          disabled={disabled}
+          onClick={onClick}
+        >
+          <span className="btn-ai-glow-inner">
+            {loading && <span className="ai-spinner" />}
+            {children}
+          </span>
+        </button>
+      </>
+    );
+  }
+
   return (
     <div className="institute-card">
-      {/* Card header — wraps on very small screens */}
       <div
         className="institute-card-header"
         onClick={toggleOpen}
@@ -133,10 +279,10 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
 
       {inst.open && (
         <div className="institute-card-body">
-          {/* Main fields — single column on narrow screens */}
+          {/* Main fields */}
           <div
             className="form-grid"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))" }}
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))" }}
           >
             <div className="field full" style={{ gridColumn: "1 / -1" }}>
               <label>Institution Name *</label>
@@ -171,20 +317,99 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
             </div>
           </div>
 
+          {/* Time Period */}
+          <div style={{ marginTop: 20 }}>
+            <label style={{
+              fontSize: 12, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase",
+              color: "var(--text-muted)", display: "block", marginBottom: 14,
+            }}>
+              Time Period
+            </label>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <MonthYearPicker
+                label="Start Date"
+                month={inst.startMonth} year={inst.startYear}
+                onMonth={(v) => set("startMonth", v)} onYear={(v) => set("startYear", v)}
+              />
+              <MonthYearPicker
+                label="End Date"
+                month={inst.endMonth} year={inst.endYear}
+                onMonth={(v) => set("endMonth", v)} onYear={(v) => set("endYear", v)}
+                disabled={inst.isCurrent}
+              />
+            </div>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 14, cursor: "pointer", userSelect: "none" }}>
+              <span
+                style={{
+                  width: 20, height: 20, borderRadius: 6,
+                  border: `2px solid ${inst.isCurrent ? "var(--accent)" : "var(--border)"}`,
+                  background: inst.isCurrent ? "var(--accent)" : "var(--surface)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s", flexShrink: 0,
+                }}
+                onClick={() => set("isCurrent", !inst.isCurrent)}
+              >
+                {inst.isCurrent && (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span
+                style={{ fontSize: 14, color: "var(--text-h)", fontWeight: 500 }}
+                onClick={() => set("isCurrent", !inst.isCurrent)}
+              >
+                I currently study here
+              </span>
+              {inst.isCurrent && (
+                <span style={{ fontSize: 12, fontWeight: 600, background: "var(--accent-bg)", color: "var(--accent)", padding: "2px 8px", borderRadius: 20 }}>
+                  Present
+                </span>
+              )}
+            </label>
+          </div>
+
           {/* Optional Description */}
           <div style={{ marginTop: 20 }}>
-            <button
-              type="button"
-              className="btn-ghost"
-              style={{
-                background: inst.showDescription ? "var(--accent-bg)" : "",
-                borderColor: inst.showDescription ? "var(--accent)" : "",
-                color: inst.showDescription ? "var(--accent)" : "",
-              }}
-              onClick={() => onUpdate({ ...inst, showDescription: !inst.showDescription })}
-            >
-              {inst.showDescription ? <><MinusIcon /> Hide Description</> : <><PlusIcon /> Add Description</>}
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="btn-ghost"
+                style={{
+                  background: inst.showDescription ? "var(--accent-bg)" : "",
+                  borderColor: inst.showDescription ? "var(--accent)" : "",
+                  color: inst.showDescription ? "var(--accent)" : "",
+                }}
+                onClick={() => onUpdate({ ...inst, showDescription: !inst.showDescription })}
+              >
+                {inst.showDescription ? <><MinusIcon /> Hide Description</> : <><PlusIcon /> Add Description</>}
+              </button>
+
+              {inst.showDescription && (
+                <AiGlowButton
+                  disabled={!inst.institute || !inst.qualification || !inst.program || inst.suggesting}
+                  loading={inst.suggesting}
+                  onClick={async () => {
+                    const id = getCVId();
+                    if (!id) return;
+                    onUpdate({ ...inst, suggesting: true });
+                    try {
+                      const { description } = await suggestDescription(id, {
+                        institute: inst.institute,
+                        qualification: inst.qualification,
+                        program: inst.program,
+                      });
+                      onUpdate({ ...inst, description, suggesting: false });
+                    } catch (err) {
+                      onUpdate({ ...inst, suggesting: false });
+                    }
+                  }}
+                >
+                  {inst.suggesting ? "Generating…" : "✨ Suggest a FREE AI description"}
+                </AiGlowButton>
+              )}
+            </div>
+
             {inst.showDescription && (
               <div className="field" style={{ marginTop: 14 }}>
                 <label>Description</label>
@@ -192,39 +417,39 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
                   placeholder="Describe your studies, achievements, thesis topic…"
                   value={inst.description}
                   onChange={(e) => set("description", e.target.value)}
-                  style={{ width: "100%", minHeight: 90 }}
+                  style={{ width: "100%", minHeight: 160 }}
                 />
               </div>
             )}
           </div>
 
           {/* Optional GPA */}
-            <div style={{ marginTop: 20 }}>
-              <button
-                type="button"
-                className="btn-ghost"
-                style={{
-                  background: inst.showGpa ? "var(--accent-bg)" : "",
-                  borderColor: inst.showGpa ? "var(--accent)" : "",
-                  color: inst.showGpa ? "var(--accent)" : "",
-                }}
-                onClick={() => onUpdate({ ...inst, showGpa: !inst.showGpa })}
-              >
-                {inst.showGpa ? <><MinusIcon /> Hide GPA</> : <><PlusIcon /> Add GPA</>}
-              </button>
-              {inst.showGpa && (
-                <div className="field" style={{ marginTop: 14, maxWidth: 200 }}>
-                  <label>GPA / Score</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 3.8 / 4.0 or 72%"
-                    value={inst.gpa}
-                    onChange={(e) => set("gpa", e.target.value)}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              )}
-            </div>
+          <div style={{ marginTop: 20 }}>
+            <button
+              type="button"
+              className="btn-ghost"
+              style={{
+                background: inst.showGpa ? "var(--accent-bg)" : "",
+                borderColor: inst.showGpa ? "var(--accent)" : "",
+                color: inst.showGpa ? "var(--accent)" : "",
+              }}
+              onClick={() => onUpdate({ ...inst, showGpa: !inst.showGpa })}
+            >
+              {inst.showGpa ? <><MinusIcon /> Hide GPA</> : <><PlusIcon /> Add GPA</>}
+            </button>
+            {inst.showGpa && (
+              <div className="field" style={{ marginTop: 14, maxWidth: 200 }}>
+                <label>GPA / Score</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 3.8 / 4.0 or 72%"
+                  value={inst.gpa}
+                  onChange={(e) => set("gpa", e.target.value)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Optional Subjects */}
           <div style={{ marginTop: 14 }}>
@@ -252,7 +477,6 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
                   </div>
                 ) : (
                   <>
-                    {/* Column headers — hidden on very small screens, shown via subject-row labels instead */}
                     <div style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 120px 36px",
@@ -335,7 +559,7 @@ function Education() {
     setSaving(true);
     setError("");
     try {
-      const payload = institutes.map(({ id: _id, open, showSubjects, showDescription, showGpa, ...rest }) => ({
+      const payload = institutes.map(({ id: _id, open, showSubjects, showDescription, showGpa, suggesting, ...rest }) => ({
         ...rest,
         subjects: rest.subjects.map(({ id: _sid, ...s }) => s),
       }));
@@ -374,7 +598,6 @@ function Education() {
 
         {error && <p style={{ fontSize: 13, color: "var(--danger)", marginTop: 12 }}>{error}</p>}
 
-        {/* Actions — stack on mobile, same pattern as PersonalInfo */}
         <div
           className="form-actions"
           style={{
