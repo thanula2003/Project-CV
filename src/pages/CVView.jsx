@@ -1577,16 +1577,17 @@ useEffect(() => {
               setExporting(true);
               try {
                 const orderId = `${cv._id}-${Date.now()}`;
-                const currency = "USD";
-                const amount = 0.30;
-
+                const currency = "LKR";
+                const amount = 100;
+            
                 const { hash, merchant_id, amount: amountFormatted } = await getPayhereHash(orderId, amount, currency);
-
+            
                 const payment = {
                   sandbox: true,
                   merchant_id,
-                  return_url: window.location.href,
-                  cancel_url: window.location.href,
+                  return_url: window.location.origin + window.location.pathname,
+                  cancel_url: window.location.origin + window.location.pathname,
+                  notify_url: "https://your-backend-domain.com/api/payment/payhere/notify",
                   order_id: orderId,
                   items: "CV PDF Download",
                   amount: amountFormatted,
@@ -1600,7 +1601,9 @@ useEffect(() => {
                   city: "Colombo",
                   country: "Sri Lanka",
                 };
-
+            
+                console.log("Payment object:", JSON.stringify(payment, null, 2));
+            
                 window.payhere.onCompleted = function () {
                   setShowPriceModal(false);
                   handleDownload();
@@ -1612,7 +1615,7 @@ useEffect(() => {
                   console.error("Payment error:", error);
                   setExporting(false);
                 };
-
+            
                 window.payhere.startPayment(payment);
               } catch (err) {
                 console.error(err);
