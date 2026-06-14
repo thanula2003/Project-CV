@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCVId, saveExperience } from "../api";
+import { getCVId, saveExperience,suggestResponsibilities } from "../api";
 
 const STEPS = [
   { label: "Personal" },
@@ -113,6 +113,117 @@ function ExperienceCard({ entry, index, onUpdate, onRemove }) {
 
   const cardTitle = entry.company || `Experience ${index + 1}`;
   const cardSub = [entry.position, entry.employmentType, formatDateRange(entry)].filter(Boolean).join(" · ");
+
+  function AiGlowButton({ onClick, disabled, loading, children }) {
+    return (
+      <>
+        <style>{`
+          .btn-ai-glow {
+            position: relative;
+            padding: 0;
+            border: none;
+            border-radius: var(--radius-sm, 8px);
+            background: transparent;
+            cursor: pointer;
+            isolation: isolate;
+          }
+          .btn-ai-glow::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+            background-size: 300% 300%;
+            animation: ai-glow-rotate 4s linear infinite;
+            z-index: 0;
+            filter: blur(6px);
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+          }
+          .btn-ai-glow::after {
+            content: "";
+            position: absolute;
+            inset: -1.5px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00f0ff, #7c3aed, #ec4899, #00f0ff);
+            background-size: 300% 300%;
+            animation: ai-glow-rotate 4s linear infinite;
+            z-index: 1;
+          }
+          .btn-ai-glow:hover::before { opacity: 1; filter: blur(10px); }
+          .btn-ai-glow.loading::before { opacity: 1; filter: blur(12px); animation-duration: 1.2s; }
+          .btn-ai-glow.loading::after { animation-duration: 1.2s; }
+          .btn-ai-glow:disabled { cursor: default; }
+          .btn-ai-glow:disabled:not(.loading)::before,
+          .btn-ai-glow:disabled:not(.loading)::after {
+            animation: none;
+            background: var(--border, #444);
+            opacity: 0.4;
+            filter: none;
+          }
+          .btn-ai-glow-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: inherit;
+            background: var(--surface, #1a1a1a);
+            color: var(--text, #fff);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+          .btn-ai-glow:disabled:not(.loading) .btn-ai-glow-inner { color: var(--text-muted, #888); }
+          .btn-ai-glow.loading .btn-ai-glow-inner {
+            background: linear-gradient(
+              90deg,
+              var(--surface, #1a1a1a) 0%,
+              rgba(124,58,237,0.25) 50%,
+              var(--surface, #1a1a1a) 100%
+            );
+            background-size: 200% 100%;
+            animation: ai-shimmer 1.5s linear infinite;
+          }
+          .ai-spinner {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-top-color: #00f0ff;
+            border-right-color: #7c3aed;
+            animation: ai-spin 0.7s linear infinite;
+            flex-shrink: 0;
+          }
+          @keyframes ai-glow-rotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          @keyframes ai-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+          @keyframes ai-spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+        <button
+          type="button"
+          className={`btn-ai-glow${loading ? " loading" : ""}`}
+          disabled={disabled}
+          onClick={onClick}
+        >
+          <span className="btn-ai-glow-inner">
+            {loading && <span className="ai-spinner" />}
+            {children}
+          </span>
+        </button>
+      </>
+    );
+  }
 
   return (
     <div className="institute-card">
@@ -263,32 +374,60 @@ function ExperienceCard({ entry, index, onUpdate, onRemove }) {
           </div>
 
           <div style={{ marginTop: 20 }}>
-            <button
-              type="button"
-              className="btn-ghost"
-              style={{
-                background: entry.showDescription ? "var(--accent-bg)" : "",
-                borderColor: entry.showDescription ? "var(--accent)" : "",
-                color: entry.showDescription ? "var(--accent)" : "",
-              }}
-              onClick={() => onUpdate({ ...entry, showDescription: !entry.showDescription })}
-            >
-              {entry.showDescription
-                ? <><MinusIcon /> Hide Description</>
-                : <><PlusIcon /> Add Roles &amp; Responsibilities</>}
-            </button>
-            {entry.showDescription && (
-              <div className="field" style={{ marginTop: 14 }}>
-                <label>What did you do?</label>
-                <textarea
-                  placeholder={"• Led development of the main dashboard\n• Collaborated with a team of 5\n• Reduced load time by 40%"}
-                  value={entry.description}
-                  onChange={(e) => set("description", e.target.value)}
-                  style={{ minHeight: 110, width: "100%" }}
-                />
-              </div>
-            )}
+  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <button
+      type="button"
+      className="btn-ghost"
+      style={{
+        background: entry.showDescription ? "var(--accent-bg)" : "",
+        borderColor: entry.showDescription ? "var(--accent)" : "",
+        color: entry.showDescription ? "var(--accent)" : "",
+      }}
+      onClick={() => onUpdate({ ...entry, showDescription: !entry.showDescription })}
+    >
+      {entry.showDescription
+        ? <><MinusIcon /> Hide Description</>
+        : <><PlusIcon /> Add Roles &amp; Responsibilities</>}
+    </button>
+
+    {entry.showDescription && (
+  <AiGlowButton
+    disabled={!entry.company || !entry.position || entry.suggesting}
+    loading={entry.suggesting}
+    onClick={async () => {
+      const id = getCVId();
+      if (!id) return;
+      onUpdate({ ...entry, suggesting: true });
+      try {
+        const { description } = await suggestResponsibilities(id, {
+          company: entry.company,
+          position: entry.position,
+          employmentType: entry.employmentType,
+        });
+        onUpdate({ ...entry, description, suggesting: false });
+      } catch (err) {
+        onUpdate({ ...entry, suggesting: false });
+      }
+    }}
+  >
+    {entry.suggesting ? "Generating…" : "✨ Suggest with AI (Free)"}
+  </AiGlowButton>
+)}
+            
           </div>
+
+          {entry.showDescription && (
+            <div className="field" style={{ marginTop: 14 }}>
+              <label>What did you do?</label>
+              <textarea
+                placeholder={"• Led development of the main dashboard\n• Collaborated with a team of 5\n• Reduced load time by 40%"}
+                value={entry.description}
+                onChange={(e) => set("description", e.target.value)}
+                style={{ minHeight: 180, width: "100%" }}
+              />
+            </div>
+          )}
+        </div>
         </div>
       )}
     </div>
@@ -311,7 +450,7 @@ function Experience() {
     setSaving(true);
     setError("");
     try {
-      const payload = entries.map(({ id: _id, open, showDescription, ...rest }) => rest);
+      const payload = entries.map(({ id: _id, open, showDescription,suggesting, ...rest }) => rest);
       await saveExperience(id, payload);
       navigate("/projects-prompt"); // ← goes to the gate page first
     } catch (err) {

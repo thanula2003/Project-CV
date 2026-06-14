@@ -179,6 +179,43 @@ router.put("/:id/education", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/cv/:id/suggest-description
+router.post("/:id/suggest-description", async (req, res, next) => {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const cv = await findCV(req.params.id, res);
+    if (!cv) return;
+
+    const { institute, qualification, program } = req.body;
+    if (!institute || !qualification || !program) {
+      return res.status(400).json({ error: "Institution, qualification, and program are required." });
+    }
+
+    const prompt = `You are a professional CV writer. Write a short description for an education entry on a CV.
+
+Institution: ${institute}
+Qualification: ${qualification}
+Program / Field of Study: ${program}
+
+Rules:
+- Write 2–3 sentences only
+- Describe the focus areas, skills gained, or relevant coursework typical of this program
+- Be specific and professional
+- Return plain text only — no markdown, no headings
+- Maximum characters including spaces 300`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.4-nano",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_completion_tokens: 150,
+    });
+
+    const description = completion.choices[0].message.content.trim();
+    res.json({ description });
+  } catch (err) { next(err); }
+});
+
 // PUT /api/cv/:id/experience
 router.put("/:id/experience", async (req, res, next) => {
   try {
@@ -190,6 +227,44 @@ router.put("/:id/experience", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/cv/:id/suggest-responsibilities
+router.post("/:id/suggest-responsibilities", async (req, res, next) => {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const cv = await findCV(req.params.id, res);
+    if (!cv) return;
+
+    const { company, position, employmentType } = req.body;
+    if (!company || !position) {
+      return res.status(400).json({ error: "Company and position are required." });
+    }
+
+    const prompt = `You are a professional CV writer. Write roles and responsibilities for a work experience entry on a CV.
+
+Company: ${company}
+Position: ${position}
+Employment Type: ${employmentType || "Not specified"}
+
+Rules:
+- Write 3–5 bullet points
+- Each bullet starts with "• " followed by an action verb
+- Be specific, achievement-oriented, and professional
+- Include realistic responsibilities and impact typical of this role
+- Return plain text only — no markdown headings, just the bullet lines separated by newlines
+- Maximum characters including spaces 400`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.4-nano",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_completion_tokens: 200,
+    });
+
+    const description = completion.choices[0].message.content.trim();
+    res.json({ description });
+  } catch (err) { next(err); }
+});
+
 // PUT /api/cv/:id/projects ← NEW
 router.put("/:id/projects", async (req, res, next) => {
   try {
@@ -198,6 +273,43 @@ router.put("/:id/projects", async (req, res, next) => {
     cv.projects = req.body;
     await cv.save();
     res.json({ ok: true, total: cv.projects.length });
+  } catch (err) { next(err); }
+});
+
+router.post("/:id/suggest-project-description", async (req, res, next) => {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const cv = await findCV(req.params.id, res);
+    if (!cv) return;
+
+    const { title, projectType, techStack } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: "Project title is required." });
+    }
+
+    const prompt = `You are a professional CV writer. Write a project description for a CV.
+
+Project Title: ${title}
+Project Type: ${projectType || "Not specified"}
+Tech Stack: ${techStack || "Not specified"}
+
+Rules:
+- Write 3–4 bullet points
+- Each bullet starts with "• " followed by an action verb
+- Be specific, achievement-oriented, and professional
+- Mention realistic features, technologies used, and impact/outcomes
+- Return plain text only — no markdown headings, just the bullet lines separated by newlines
+- Maximum characters including spaces 400`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.4-nano",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_completion_tokens: 200,
+    });
+
+    const description = completion.choices[0].message.content.trim();
+    res.json({ description });
   } catch (err) { next(err); }
 });
 
@@ -368,13 +480,17 @@ router.post("/:id/reviews", async (req, res, next) => {
       return res.status(400).json({ error: "Please write at least a few words." });
     }
 
-    cv.reviews.push({
+    const review = {
       name: name?.trim() || "Anonymous",
       rating: Number(rating),
       comment: comment.trim(),
-    });
+    };
 
+    cv.reviews.push(review);
     await cv.save();
+
+    
+
     res.status(201).json({ ok: true, review: cv.reviews[cv.reviews.length - 1] });
   } catch (err) { next(err); }
 });
