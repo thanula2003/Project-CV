@@ -5,18 +5,13 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-/**
- * IMPORTANT:
- * Read env INSIDE handlers so it's always available
- * after app.js loads dotenv
- */
+
 
 function getEnv() {
   const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
   const MERCHANT_SECRET = process.env.PAYHERE_MERCHANT_SECRET;
 
-  console.log("PayHere Merchant ID:", MERCHANT_ID);
-  console.log("PayHere Secret length:", MERCHANT_SECRET?.length);
+
 
   if (!MERCHANT_ID || !MERCHANT_SECRET) {
     throw new Error("Missing PAYHERE env variables");

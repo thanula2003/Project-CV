@@ -14,6 +14,11 @@ const educationSchema = new mongoose.Schema(
     program:       { type: String, trim: true },
     description:   { type: String, trim: true },
     gpa:           { type: String, trim: true },
+    startMonth:    { type: String },
+    startYear:     { type: String },
+    endMonth:      { type: String },
+    endYear:       { type: String },
+    isCurrent:     { type: Boolean, default: false },
     subjects:      [subjectSchema],
   },
   { _id: false }
@@ -35,7 +40,7 @@ const experienceSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// ── NEW: Project sub-schema ────────────────────────────────────
+// ── Project sub-schema ────────────────────────────────────
 const projectSchema = new mongoose.Schema(
   {
     title:       { type: String, trim: true },
@@ -77,7 +82,7 @@ const cvSchema = new mongoose.Schema(
     photo:      { type: String, default: "" },
     education:  [educationSchema],
     experience: [experienceSchema],
-    projects:   [projectSchema],   // ← NEW
+    projects:   [projectSchema],
     skills:     [{ type: String, trim: true }],
     summary:    { type: String, trim: true },
     reviews:    [reviewSchema],

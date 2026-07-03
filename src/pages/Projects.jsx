@@ -491,7 +491,7 @@ function ProjectCard({ entry, index, onUpdate, onRemove }) {
                   </AiGlowButton>
               </div>
               <textarea
-                placeholder={"• Built a full-stack CV builder with AI-powered content generation\n• Integrated PayHere payment gateway for premium PDF exports\n• Deployed on Hostinger with MongoDB Atlas as the database"}
+                placeholder={""}
                 value={entry.description}
                 onChange={(e) => set("description", e.target.value)}
                 style={{ minHeight: 180, width: "100%", resize: "vertical", marginTop: 10 }}
