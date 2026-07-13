@@ -1,15 +1,13 @@
-//backend/app.js
+//app.js 
+
 import { fileURLToPath } from "url";
 import path from "path";
-import { createRequire } from "module";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Must be first — before any other imports that read process.env
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, ".env") });
-console.log(process.env.PAYHERE_MERCHANT_ID);
-console.log(process.env.PAYHERE_MERCHANT_SECRET);
 
 import express from "express";
 import cors from "cors";
@@ -19,12 +17,17 @@ import paymentRoutes from "./src/routes/payment.js";
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://192.168.1.100:5173",
+  "https://atsfriendlycvbuilder.com",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.1.100:5173"
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
@@ -39,17 +42,29 @@ mongoose
     process.exit(1);
   });
 
-// ── Routes ────────────────────────────────────────────────────
+// ── API routes ──────────────────────────────────────────────────
 app.use("/api/cv", cvRoutes);
 app.use("/api/payment", paymentRoutes);
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-// ── Global error handler ──────────────────────────────────────
+// ── Serve built frontend ────────────────────────────────────────
+// Assumes frontend/dist is uploaded alongside backend, one level up.
+// Adjust FRONTEND_DIST_PATH below if your Hostinger folder layout differs.
+const frontendDistPath = path.join(__dirname, "../dist");
+app.use(express.static(frontendDistPath));
+
+// Catch-all for React Router — must come AFTER /api routes,
+// and must NOT swallow /api/* requests.
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
+
+// ── Global error handler ─────────────────────────────────────────
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`🚀  Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀  Server running on port ${PORT}`));
