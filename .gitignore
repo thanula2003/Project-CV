@@ -7,13 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local files
 *.local
+
+# Environment files
 .env
-# Ignore backend environment variables
+.env.*
+!.env.example
 backend/.env
+backend/.env.*
+
+# API keys
 backend/src/routes/API key.txt
 
 # Editor directories and files
@@ -26,5 +37,3 @@ backend/src/routes/API key.txt
 *.njsproj
 *.sln
 *.sw?
-
-dist
