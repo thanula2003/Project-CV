@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+.env
 # Ignore backend environment variables
 backend/.env
 backend/src/routes/API key.txt
