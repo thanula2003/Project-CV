@@ -1,9 +1,7 @@
 // src/api.js
 
 const API_HOST =
-  window.location.hostname === "localhost"
-    ? "localhost"
-    : "192.168.1.100";
+  window.location.hostname === "localhost" ? "localhost" : "https://atsfriendlycvbuilder.com";
 
 const BASE = `http://${API_HOST}:3001/api`;
 
