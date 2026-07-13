@@ -26,3 +26,5 @@ backend/src/routes/API key.txt
 *.njsproj
 *.sln
 *.sw?
+
+dist
