@@ -84,7 +84,7 @@ const POLICY_CONTENT = {
 
 Nature of the Service
 
-The $0.30 payment unlocks a one-time, watermark-free PDF export of the CV you have created. This is a digital product delivered instantly upon successful payment.
+The payment unlocks a one-time, watermark-free PDF export of the CV you have created. This is a digital product delivered instantly upon successful payment.
 
 Refund Eligibility
 
@@ -199,7 +199,7 @@ AI-Generated Content
 
 Pricing and Payments
 
-- A one-time fee of $0.30 (or the equivalent in LKR, calculated using real-time exchange rates for users in Sri Lanka) is charged to download a watermark-free PDF of your CV.
+- A one-time fee of Rs. 100 (or the equivalent in your local currency, calculated using real-time exchange rates for users outside Sri Lanka) is charged to download a watermark-free PDF of your CV.
 - Prices displayed are determined automatically based on your approximate location at the time of payment.
 - Payments are processed securely through PayHere. By making a payment, you authorize the charge of the displayed amount to your chosen payment method.
 - We reserve the right to change pricing at any time. Changes will not affect payments already completed.
@@ -254,6 +254,41 @@ function formatProjectDateRange(proj) {
   if (start && end) return `${start} – ${end}`;
   return start || end || "";
 }
+
+// ── Geolocation-based price helper ──────────────────────────────
+async function getLocalPrice() {
+  try {
+    const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
+    // const geo = { country_code: "USA", currency: "USD" };
+    const countryCode = geo?.country_code;
+    const localCurrency = geo?.currency; 
+
+    
+    if (countryCode === "LK") {
+      return { display: "Rs. 100.00" };
+    }
+
+    const fx = await fetch("https://open.er-api.com/v6/latest/LKR").then((r) => r.json());
+
+    // Convert to the visitor's local currency if we have a rate for it
+    if (localCurrency && fx?.rates?.[localCurrency]) {
+      const converted = (100 * fx.rates[localCurrency]).toFixed(2);
+      return { display: `${converted} ${localCurrency}` };
+    }
+
+    // Fallback: convert to USD if local currency rate isn't available
+    const usdRate = fx?.rates?.USD || 0.003;
+    const usdAmount = (100 * usdRate).toFixed(2);
+    return { display: `$${usdAmount}` };
+  } catch {
+    // Final fallback if geolocation or FX lookup fails entirely
+    return { display: "Rs. 100.00" };
+  }
+}
+
+// async function getLocalPrice() {
+//   return { display: "$0.30", amount: 0.3, currency: "USD" };
+// }
 
 const A4_W = 794;
 const A4_H = 1123;
@@ -451,6 +486,9 @@ function CVDocument({ cv, template }) {
                   </div>
                   <div style={s.company}>{edu.institute}</div>
                 </div>
+                {formatDateRange(edu) && (
+                  <div style={s.dateRange}>{formatDateRange(edu)}</div>
+                )}
               </div>
               {edu.description && <div style={{ fontSize: 10.5, opacity: 0.75, marginTop: 4 }}>{edu.description}</div>}
               {edu.gpa && <div style={{ fontSize: 10.5, color: s.wrap.color, opacity: 0.75, marginTop: 2 }}>GPA: <span style={{ fontWeight: 600, opacity: 1 }}>{edu.gpa}</span></div>}
@@ -746,7 +784,7 @@ function ReviewForm({ cvId }) {
 }
 
 // ── Price Modal ────────────────────────────────────────────────
-function PriceModal({ onConfirm, onClose, processing, onOpenPolicy }) {
+function PriceModal({ onConfirm, onClose, processing, onOpenPolicy, price }) {
   return (
     <div
       style={{
@@ -784,14 +822,19 @@ function PriceModal({ onConfirm, onClose, processing, onOpenPolicy }) {
           Pay to Download Your CV
         </h3>
         <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
-          Unlock a clean, watermark-free PDF for just $0.30.
+          Unlock a clean, watermark-free PDF.
         </p>
 
         <div style={{
           fontSize: 32, fontWeight: 800, color: "var(--text-h)",
           marginBottom: 20,
         }}>
-          $0.30
+          {price ? price.display : (
+            <span style={{ fontSize: 16, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+              <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
+              Calculating price…
+            </span>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -799,7 +842,7 @@ function PriceModal({ onConfirm, onClose, processing, onOpenPolicy }) {
             type="button"
             className="btn-primary"
             onClick={onConfirm}
-            disabled={processing}
+            disabled={processing || !price}
             style={{ width: "100%", justifyContent: "center" }}
           >
             {processing ? (
@@ -940,6 +983,7 @@ function CVView() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [activePolicy, setActivePolicy] = useState(null); // "refund" | "privacy" | "terms" | null
+  const [price, setPrice] = useState(null);
 
   useEffect(() => {
     const id = getCVId();
@@ -955,6 +999,13 @@ useEffect(() => {
   mq.addEventListener("change", handler);
   return () => mq.removeEventListener("change", handler);
 }, []);
+
+  // Fetch geolocation-based price once when the price modal is first opened
+  useEffect(() => {
+    if (showPriceModal && !price) {
+      getLocalPrice().then(setPrice);
+    }
+  }, [showPriceModal, price]);
 
   const handleTemplateChange = (tpl) => { setTemplate(tpl); localStorage.setItem("cv_template", tpl); };
   const handlePageModeChange = (mode) => { setPageMode(mode); localStorage.setItem("cv_page_mode", mode); };
@@ -1571,6 +1622,7 @@ useEffect(() => {
 {showPriceModal && (
           <PriceModal
             processing={exporting}
+            price={price}
             onClose={() => !exporting && setShowPriceModal(false)}
             onOpenPolicy={(key) => setActivePolicy(key)}
             onConfirm={async () => {
