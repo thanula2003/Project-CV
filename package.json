@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "vite build && cd backend && npm install"
   },
   "dependencies": {
     "html2pdf.js": "^0.14.0",
