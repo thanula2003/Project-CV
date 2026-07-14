@@ -1,9 +1,6 @@
 // src/api.js
 
-const API_HOST =
-  window.location.hostname === "localhost" ? "localhost" : "https://atsfriendlycvbuilder.com";
-
-const BASE = `http://${API_HOST}:3001/api`;
+const BASE = `${import.meta.env.VITE_API_URL}/api`;
 
 const WEB3FORMS_ACCESS_KEY = "c826b807-641f-4051-86dd-8de1bd1694f7";
 
