@@ -1486,13 +1486,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* ATS guarantee */}
-          <div className="sidebar-section">
-            <div style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.55 }}>
-              <span style={{ fontSize: 15, flexShrink: 0 }}>✅</span>
-              <span><strong style={{ color: "var(--text-h)" }}>ATS-safe</strong> — single-column, no images or tables.</span>
-            </div>
-          </div>
+          
 
           {/* Review (collapsible) */}
           <div className="sidebar-section" style={{ flex: 1 }}>
