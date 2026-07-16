@@ -1018,17 +1018,30 @@ useEffect(() => {
     const el = cvRef.current;
     const name = cv?.personalInfo?.fullName?.replace(/\s+/g, "_") || "CV";
 
-    // Reset any preview transform so html2canvas sees the element at true A4_W
+    // Reset any preview transform so html2canvas sees the element at true A4_W.
+    // NOTE: marginBottom must be reset here too — on mobile, ScaledA4 applies a
+    // large *negative* marginBottom to compensate for the CSS scale-down used
+    // in the on-screen preview (mobile screens are narrower than A4_W, so the
+    // preview is shrunk and the leftover empty space below it is pulled up
+    // with a negative margin). If we only reset `transform` and forget
+    // `marginBottom`, the element pops back to full natural height while the
+    // huge negative margin from the shrunk preview is still applied — which
+    // visually crushes/clips everything below roughly where the scaled
+    // preview used to end. That's exactly the "content missing below Work
+    // Experience" bug on phones. On desktop this was invisible because
+    // scale is usually 1 there, so marginBottom was already 0.
     const prev = {
       transform: el.style.transform,
       transformOrigin: el.style.transformOrigin,
       opacity: el.style.opacity,
       marginRight: el.style.marginRight,
+      marginBottom: el.style.marginBottom,
     };
     el.style.transform       = "none";
     el.style.transformOrigin = "top left";
     el.style.opacity         = "1";
     el.style.marginRight     = "0";
+    el.style.marginBottom    = "0";
 
     try {
       if (pageMode === "1page") {
@@ -1112,6 +1125,7 @@ useEffect(() => {
       el.style.transformOrigin = prev.transformOrigin;
       el.style.opacity         = prev.opacity;
       el.style.marginRight     = prev.marginRight;
+      el.style.marginBottom    = prev.marginBottom;
       if (watermarkRef.current) watermarkRef.current.style.display = "";
       setExporting(false);
     }
