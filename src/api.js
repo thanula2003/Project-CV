@@ -1,6 +1,10 @@
 // src/api.js
 
-const BASE = `${import.meta.env.VITE_API_URL}/api`;
+// In dev (Vite dev server), VITE_API_URL points to your local backend (e.g. http://localhost:5000).
+// In production, leave VITE_API_URL unset so requests stay relative to whatever
+// domain the page was actually loaded from — this avoids CORS and www/non-www
+// mismatches entirely, since Express serves both the API and the built frontend.
+const BASE = `${import.meta.env.VITE_API_URL || ""}/api`;
 
 const WEB3FORMS_ACCESS_KEY = "c826b807-641f-4051-86dd-8de1bd1694f7";
 
