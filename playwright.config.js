@@ -19,7 +19,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL — testing the live deployed site, no local dev server needed */
-    baseURL: 'https://atsfriendlycvbuilder.com',
+    baseURL: 'http://localhost:5173/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

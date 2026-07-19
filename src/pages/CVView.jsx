@@ -258,8 +258,8 @@ function formatProjectDateRange(proj) {
 // ── Geolocation-based price helper ──────────────────────────────
 async function getLocalPrice() {
   try {
-    const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
-    // const geo = { country_code: "USA", currency: "USD" };
+    // const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
+    const geo = { country_code: "USA", currency: "USD" };
     const countryCode = geo?.country_code;
     const localCurrency = geo?.currency; 
 
