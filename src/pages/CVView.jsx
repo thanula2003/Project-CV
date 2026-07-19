@@ -1045,12 +1045,6 @@ useEffect(() => {
 
     try {
       if (pageMode === "1page") {
-        // ── Single-page PDF ────────────────────────────────────
-        // html2canvas ignores CSS transform — it captures at the real DOM size.
-        // We measure the natural full height, compute a fit-scale, then apply it
-        // inside onclone (the detached DOM copy html2canvas renders from).
-        // jsPDF page size is set to [A4_W × scaledHeight] so everything lands on
-        // exactly one page with no crops and no blank space.
         const naturalH = el.scrollHeight;
         const fitScale = naturalH > A4_H ? A4_H / naturalH : 1;
         const scaledH  = Math.round(naturalH * fitScale);
@@ -1544,23 +1538,25 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* 2. CV preview */}
-        <div className="mobile-cv-area">
-          <div className="mobile-watermark-pill">
-            <LockIcon />
-            Preview — watermarked
-          </div>
-          <div className="cv-paper-shadow" style={{ width: "100%" }}>
-            {cv && (
-              <ScaledA4
-                cv={cv}
-                template={template}
-                outerRef={cvRef}
-                watermarkRef={watermarkRef}
-              />
-            )}
-          </div>
-        </div>
+          {/* 2. CV preview (mobile only — desktop renders its own copy below) */}
+          {isMobile && (
+            <div className="mobile-cv-area">
+              <div className="mobile-watermark-pill">
+                <LockIcon />
+                Preview — watermarked
+              </div>
+              <div className="cv-paper-shadow" style={{ width: "100%" }}>
+                {cv && (
+                  <ScaledA4
+                    cv={cv}
+                    template={template}
+                    outerRef={cvRef}
+                    watermarkRef={watermarkRef}
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 3. Action buttons */}
           <div className="mobile-actions">
