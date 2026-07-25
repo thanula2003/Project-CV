@@ -4,7 +4,9 @@
 // In production, leave VITE_API_URL unset so requests stay relative to whatever
 // domain the page was actually loaded from — this avoids CORS and www/non-www
 // mismatches entirely, since Express serves both the API and the built frontend.
+
 const BASE = `${import.meta.env.VITE_API_URL || ""}/api`;
+console.log("API BASE is:", BASE);
 
 const WEB3FORMS_ACCESS_KEY = "c826b807-641f-4051-86dd-8de1bd1694f7";
 
@@ -68,5 +70,10 @@ export async function submitReview(id, data) {
 
 export const getRecentReviews         = ()          => request("GET", `/cv/reviews/top`);
 export const getLatestReviews         = (limit = 3) => request("GET", `/cv/reviews/recent?limit=${limit}`);
+export const createPaypalOrder = (orderId) =>
+  request("POST", "/payment/paypal/create-order", { orderId });
+
+export const capturePaypalOrder = (orderID) =>
+  request("POST", "/payment/paypal/capture-order", { orderID });
 export const getPayhereHash = (orderId, amount, currency) =>
   request("POST", `/payment/payhere/hash`, { order_id: orderId, amount, currency });

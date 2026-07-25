@@ -15,6 +15,7 @@ import mongoose from "mongoose";
 import cvRoutes from "./src/routes/cv.js";
 import paymentRoutes from "./src/routes/payment.js";
 
+
 const app = express();
 
 const allowedOrigins = [

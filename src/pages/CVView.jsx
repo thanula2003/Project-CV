@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, getCV, submitReview, getPayhereHash } from "../api";
 import html2pdf from "html2pdf.js";
+import { createPaypalOrder } from "../api";
+import { capturePaypalOrder } from "../api";
 
 // ── Icons ──────────────────────────────────────────────────────
 const DownloadIcon = () => (
@@ -107,6 +109,10 @@ Refunds will not be issued for:
 How to Request a Refund
 
 If you believe you are eligible for a refund, please contact our support team within 7 days of the transaction, providing your payment reference number and a description of the issue.
+
+Refund Method
+
+All approved refunds will be credited back to the original payment method used to initiate the transaction (e.g., the same card, bank account, or wallet used at checkout). We are unable to issue refunds to a different account, card, or payment method than the one used for the original payment.
 
 Processing Time
 
@@ -259,30 +265,31 @@ function formatProjectDateRange(proj) {
 async function getLocalPrice() {
   try {
     const geo = await fetch("https://ipapi.co/json/").then((r) => r.json());
-    // const geo = { country_code: "GER", currency: "EUR" };
+    // const geo ="US";
     const countryCode = geo?.country_code;
-    const localCurrency = geo?.currency; 
+    const localCurrency = geo?.currency;
 
-    
     if (countryCode === "LK") {
-      return { display: "Rs. 100.00" };
+      return { gateway: "payhere", display: "Rs. 100.00", amount: 100, currency: "LKR" };
     }
 
-    const fx = await fetch("https://open.er-api.com/v6/latest/LKR").then((r) => r.json());
+    const result = { gateway: "paypal", display: "$0.30 USD", amount: 0.3, currency: "USD" };
 
-    // Convert to the visitor's local currency if we have a rate for it
-    if (localCurrency && fx?.rates?.[localCurrency]) {
-      const converted = (100 * fx.rates[localCurrency]).toFixed(2);
-      return { display: `${converted} ${localCurrency}` };
+    if (countryCode !== "US" && localCurrency && localCurrency !== "USD") {
+      try {
+        const fx = await fetch("https://open.er-api.com/v6/latest/USD").then((r) => r.json());
+        if (fx?.rates?.[localCurrency]) {
+          const converted = (0.3 * fx.rates[localCurrency]).toFixed(2);
+          result.localDisplay = `≈ ${converted} ${localCurrency}`;
+        }
+      } catch {
+        // silently skip the courtesy conversion if FX lookup fails
+      }
     }
 
-    // Fallback: convert to USD if local currency rate isn't available
-    const usdRate = fx?.rates?.USD || 0.003;
-    const usdAmount = (100 * usdRate).toFixed(2);
-    return { display: `$${usdAmount}` };
+    return result;
   } catch {
-    // Final fallback if geolocation or FX lookup fails entirely
-    return { display: "Rs. 100.00" };
+    return { gateway: "payhere", display: "Rs. 100.00", amount: 100, currency: "LKR" };
   }
 }
 
@@ -783,8 +790,64 @@ function ReviewForm({ cvId }) {
   );
 }
 
+function loadPaypalScript(clientId) {
+  return new Promise((resolve, reject) => {
+    if (window.paypal) return resolve(window.paypal);
+    const existing = document.getElementById("paypal-sdk");
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.paypal));
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "paypal-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
+    script.onload = () => resolve(window.paypal);
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+}
+
+function PaypalButton({ cv, onSuccess, onError, onCancel }) {
+  const containerRef = useRef();
+  const rendered = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPaypalScript(import.meta.env.VITE_PAYPAL_CLIENT_ID)
+      .then((paypal) => {
+        if (cancelled || rendered.current || !containerRef.current) return;
+        rendered.current = true;
+        paypal
+          .Buttons({
+            style: { layout: "vertical", label: "pay", height: 40 },
+            createOrder: async () => {
+              const orderId = `${cv._id}-${Date.now()}`;
+              const { id } = await createPaypalOrder(orderId);
+              return id;
+            },
+            onApprove: async (data) => {
+              try {
+                const result = await capturePaypalOrder(data.orderID);
+                if (result.status === "COMPLETED") onSuccess();
+                else onError(new Error("Payment not completed"));
+              } catch (err) {
+                onError(err);
+              }
+            },
+            onCancel: () => onCancel?.(),
+            onError: (err) => onError(err),
+          })
+          .render(containerRef.current);
+      })
+      .catch(onError);
+    return () => { cancelled = true; };
+  }, [cv]);
+
+  return <div ref={containerRef} style={{ minHeight: 45 }} />;
+}
+
 // ── Price Modal ────────────────────────────────────────────────
-function PriceModal({ onConfirm, onClose, processing, onOpenPolicy, price }) {
+function PriceModal({ cv, price, processing, onPayhereConfirm, onPaypalSuccess, onPaypalError, onClose, onOpenPolicy }) {
   return (
     <div
       style={{
@@ -825,30 +888,44 @@ function PriceModal({ onConfirm, onClose, processing, onOpenPolicy, price }) {
           Unlock a clean, watermark-free PDF.
         </p>
 
-        <div style={{
-          fontSize: 32, fontWeight: 800, color: "var(--text-h)",
-          marginBottom: 20,
-        }}>
-          {price ? price.display : (
-            <span style={{ fontSize: 16, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-              <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
-              Calculating price…
-            </span>
-          )}
-        </div>
+        {price ? (
+          <>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-h)", marginBottom: price.localDisplay ? 4 : 20 }}>
+              {price.display}
+            </div>
+            {price.localDisplay && (
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
+                {price.localDisplay}
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ fontSize: 16, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 20 }}>
+            <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
+            Calculating price…
+          </div>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={onConfirm}
-            disabled={processing || !price}
-            style={{ width: "100%", justifyContent: "center" }}
-          >
-            {processing ? (
-              <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Processing…</>
-            ) : "Pay Now"}
-          </button>
+          {price?.gateway === "paypal" ? (
+            <PaypalButton
+              cv={cv}
+              onSuccess={onPaypalSuccess}
+              onError={onPaypalError}
+            />
+          ) : (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={onPayhereConfirm}
+              disabled={processing || !price}
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              {processing ? (
+                <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Processing…</>
+              ) : "Pay Now"}
+            </button>
+          )}
           <button
             type="button"
             className="btn-secondary"
@@ -1624,69 +1701,76 @@ useEffect(() => {
       `}</style>
 
 {showPriceModal && (
-          <PriceModal
-            processing={exporting}
-            price={price}
-            onClose={() => !exporting && setShowPriceModal(false)}
-            onOpenPolicy={(key) => setActivePolicy(key)}
-            onConfirm={async () => {
-              setExporting(true);
-              try {
-                const orderId = `${cv._id}-${Date.now()}`;
-                const currency = "LKR";
-                const amount = 100;
-            
-                const { hash, merchant_id, amount: amountFormatted } = await getPayhereHash(orderId, amount, currency);
-            
-                const payment = {
-                  sandbox: true,
-                  merchant_id,
-                  return_url: window.location.origin + window.location.pathname,
-                  cancel_url: window.location.origin + window.location.pathname,
-                  notify_url: "https://your-backend-domain.com/api/payment/payhere/notify",
-                  order_id: orderId,
-                  items: "CV PDF Download",
-                  amount: amountFormatted,
-                  currency,
-                  hash,
-                  first_name: cv?.personalInfo?.fullName?.split(" ")[0] || "Customer",
-                  last_name: cv?.personalInfo?.fullName?.split(" ").slice(1).join(" ") || "User",
-                  email: cv?.personalInfo?.email || "test@example.com",
-                  phone: cv?.personalInfo?.phones?.[0] || "0771234567",
-                  address: cv?.personalInfo?.address || "N/A",
-                  city: "Colombo",
-                  country: "Sri Lanka",
-                };
-            
-                console.log("Payment object:", JSON.stringify(payment, null, 2));
-            
-                window.payhere.onCompleted = function () {
-                  setShowPriceModal(false);
-                  handleDownload();
-                };
-                window.payhere.onDismissed = function () {
-                  setExporting(false);
-                };
-                window.payhere.onError = function (error) {
-                  console.error("Payment error:", error);
-                  setExporting(false);
-                };
-            
-                window.payhere.startPayment(payment);
-              } catch (err) {
-                console.error(err);
-                setExporting(false);
-              }
-            }}
-          />
-        )}
+  <PriceModal
+    cv={cv}
+    price={price}
+    processing={exporting}
+    onClose={() => !exporting && setShowPriceModal(false)}
+    onOpenPolicy={(key) => setActivePolicy(key)}
+    onPaypalSuccess={() => {
+      setShowPriceModal(false);
+      handleDownload();
+    }}
+    onPaypalError={(err) => {
+      console.error("PayPal error:", err);
+      setExporting(false);
+    }}
+    onPayhereConfirm={async () => {
+      setExporting(true);
+      try {
+        const orderId = `${cv._id}-${Date.now()}`;
+        const currency = "LKR";
+        const amount = 100;
 
-        {activePolicy && (
-          <PolicyModal
-            policyKey={activePolicy}
-            onClose={() => setActivePolicy(null)}
-          />
-        )}
+        const { hash, merchant_id, amount: amountFormatted } = await getPayhereHash(orderId, amount, currency);
+
+        const payment = {
+          sandbox: true,
+          merchant_id,
+          return_url: window.location.origin + window.location.pathname,
+          cancel_url: window.location.origin + window.location.pathname,
+          notify_url: "https://atsfriendlycvbuilder.com/backend/api/payment/payhere/notify",
+          order_id: orderId,
+          items: "CV PDF Download",
+          amount: amountFormatted,
+          currency,
+          hash,
+          first_name: cv?.personalInfo?.fullName?.split(" ")[0] || "Customer",
+          last_name: cv?.personalInfo?.fullName?.split(" ").slice(1).join(" ") || "User",
+          email: cv?.personalInfo?.email || "test@example.com",
+          phone: cv?.personalInfo?.phones?.[0] || "0771234567",
+          address: cv?.personalInfo?.address || "N/A",
+          city: "Colombo",
+          country: "Sri Lanka",
+        };
+
+        window.payhere.onCompleted = function () {
+          setShowPriceModal(false);
+          handleDownload();
+        };
+        window.payhere.onDismissed = function () {
+          setExporting(false);
+        };
+        window.payhere.onError = function (error) {
+          console.error("Payment error:", error);
+          setExporting(false);
+        };
+
+        window.payhere.startPayment(payment);
+      } catch (err) {
+        console.error(err);
+        setExporting(false);
+      }
+    }}
+  />
+)}
+
+{activePolicy && (
+  <PolicyModal
+    policyKey={activePolicy}
+    onClose={() => setActivePolicy(null)}
+  />
+)}
     </div>
   );
 }

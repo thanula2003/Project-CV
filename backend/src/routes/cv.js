@@ -373,6 +373,7 @@ Rules:
 - No markdown, no explanation, no extra text — just the raw JSON array.
 - Include a mix of technical and soft skills relevant to their background.
 - If IT related, must return programming languages and tools.
+- Don't use IT related skills if the candidate's background is non-IT.
 
 Example output format: ["JavaScript", "Team Leadership", "Data Analysis"]`;
 
