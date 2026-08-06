@@ -280,7 +280,7 @@ function TemplateSelect() {
           <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
           <span>
             <strong style={{ color: "var(--text-h)" }}>ATS-safe guarantee:</strong> All templates use a
-            single-column layout with no photos, tables for layout, or text boxes — so applicant tracking
+            single-column layout with no tables for layout, or text boxes — so applicant tracking
             systems can parse your CV without errors.
           </span>
         </div>
