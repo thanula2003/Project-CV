@@ -847,12 +847,20 @@ function PaypalButton({ cv, onSuccess, onError, onCancel }) {
 }
 
 // ── Price Modal ────────────────────────────────────────────────
-function PriceModal({ cv, price, processing, onPayhereConfirm, onPaypalSuccess, onPaypalError, onClose, onOpenPolicy }) {
+function PriceModal({ price, processing, onFreeDownload, onClose, onOpenPolicy }) {
+  const [freeOffer, setFreeOffer] = useState(false);
+
+  // Keep the normal location-based price visible briefly, then reveal the offer.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setFreeOffer(true), 1000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 1000,
-        background: "rgba(0,0,0,0.45)",
+        background: "rgba(0,0,0,0.52)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 20,
         animation: "fadeIn 0.15s ease both",
@@ -860,99 +868,150 @@ function PriceModal({ cv, price, processing, onPayhereConfirm, onPaypalSuccess, 
       onClick={onClose}
     >
       <div
+        className={freeOffer ? "price-modal-free-offer" : ""}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "var(--surface)",
+          position: "relative",
+          overflow: "hidden",
+          background: freeOffer
+            ? "linear-gradient(145deg, #07111f 0%, #0b1f36 52%, #06101c 100%)"
+            : "var(--surface)",
           borderRadius: "var(--radius)",
-          border: "1px solid var(--border)",
+          border: freeOffer ? "1px solid rgba(125,211,252,0.45)" : "1px solid var(--border)",
           width: "100%", maxWidth: 360,
           padding: "28px 24px",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
-          animation: "fadeUp 0.2s ease both",
+          boxShadow: freeOffer
+            ? "0 28px 80px rgba(0,0,0,0.5), inset 0 0 42px rgba(56,189,248,0.08)"
+            : "0 24px 64px rgba(0,0,0,0.25)",
+          animation: freeOffer ? "glassCrack 0.55s cubic-bezier(.2,.8,.2,1) both" : "fadeUp 0.2s ease both",
           textAlign: "center",
+          transition: "background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
         }}
       >
-        <div style={{
-          width: 48, height: 48, borderRadius: "50%",
-          background: "var(--accent-bg)", color: "var(--accent)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 14px", fontSize: 22,
-        }}>
-          <DownloadIcon />
-        </div>
-
-        <h3 style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700, color: "var(--text-h)" }}>
-          Pay to Download Your CV
-        </h3>
-        <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
-          Unlock a clean, watermark-free PDF.
-        </p>
-
-        {price ? (
-          <>
-            <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-h)", marginBottom: price.localDisplay ? 4 : 20 }}>
-              {price.display}
-            </div>
-            {price.localDisplay && (
-              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
-                {price.localDisplay}
-              </div>
-            )}
-          </>
-        ) : (
-          <div style={{ fontSize: 16, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 20 }}>
-            <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
-            Calculating price…
+        {freeOffer && (
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.72 }}>
+            <span className="glass-line glass-line-1" />
+            <span className="glass-line glass-line-2" />
+            <span className="glass-line glass-line-3" />
+            <span className="glass-line glass-line-4" />
+            <span className="glass-line glass-line-5" />
+            <span className="glass-shard glass-shard-1" />
+            <span className="glass-shard glass-shard-2" />
+            <span className="glass-shard glass-shard-3" />
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {price?.gateway === "paypal" ? (
-            <PaypalButton
-              cv={cv}
-              onSuccess={onPaypalSuccess}
-              onError={onPaypalError}
-            />
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: "50%",
+            background: freeOffer ? "rgba(56,189,248,0.14)" : "var(--accent-bg)",
+            color: freeOffer ? "#7dd3fc" : "var(--accent)",
+            border: freeOffer ? "1px solid rgba(125,211,252,0.38)" : "none",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 14px", fontSize: 22,
+            boxShadow: freeOffer ? "0 0 28px rgba(56,189,248,0.22)" : "none",
+          }}>
+            <DownloadIcon />
+          </div>
+
+          {!freeOffer ? (
+            <>
+              <h3 style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 700, color: "var(--text-h)" }}>
+                Pay to Download Your CV
+              </h3>
+              <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>
+                Unlock a clean, watermark-free PDF.
+              </p>
+
+              {price ? (
+                <>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-h)", marginBottom: price.localDisplay ? 4 : 20 }}>
+                    {price.display}
+                  </div>
+                  {price.localDisplay && (
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
+                      {price.localDisplay}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ fontSize: 16, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 20 }}>
+                  <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
+                  Calculating price…
+                </div>
+              )}
+
+              <div style={{ fontSize: 11, color: "var(--text-muted)", opacity: 0.8 }}>
+                Checking today&apos;s available offer…
+              </div>
+            </>
           ) : (
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={onPayhereConfirm}
-              disabled={processing || !price}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {processing ? (
-                <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />Processing…</>
-              ) : "Pay Now"}
-            </button>
+            <>
+              <div style={{
+                display: "inline-block", marginBottom: 10, padding: "4px 10px",
+                borderRadius: 999, background: "rgba(34,197,94,0.14)",
+                border: "1px solid rgba(74,222,128,0.35)", color: "#86efac",
+                fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase",
+              }}>
+                Limited Offer
+              </div>
+              <h3 style={{ margin: "0 0 8px", fontSize: 25, fontWeight: 900, color: "#f8fafc", letterSpacing: "-0.03em" }}>
+                Download for FREE
+              </h3>
+              <p style={{ margin: "0 0 20px", fontSize: 13, color: "#bae6fd", lineHeight: 1.55 }}>
+                Your watermark-free CV is unlocked for this limited-time offer.
+              </p>
+
+              <button
+                type="button"
+                onClick={onFreeDownload}
+                disabled={processing}
+                style={{
+                  width: "100%", minHeight: 46, border: "none", borderRadius: 10,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9,
+                  cursor: processing ? "not-allowed" : "pointer",
+                  background: "linear-gradient(135deg, #22c55e, #06b6d4)",
+                  color: "#fff", fontFamily: "inherit", fontSize: 14, fontWeight: 800,
+                  boxShadow: "0 12px 30px rgba(6,182,212,0.28)",
+                  opacity: processing ? 0.75 : 1,
+                }}
+              >
+                {processing ? (
+                  <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} /> Preparing PDF…</>
+                ) : (
+                  <><DownloadIcon /> Download Free PDF</>
+                )}
+              </button>
+            </>
           )}
+
           <button
             type="button"
-            className="btn-secondary"
             onClick={onClose}
             disabled={processing}
-            style={{ width: "100%", justifyContent: "center" }}
+            style={{
+              width: "100%", marginTop: 8, padding: "9px 12px", borderRadius: 8,
+              border: freeOffer ? "1px solid rgba(148,163,184,0.28)" : "1px solid var(--border)",
+              background: freeOffer ? "rgba(15,23,42,0.48)" : "var(--surface-2)",
+              color: freeOffer ? "#cbd5e1" : "var(--text-h)", cursor: processing ? "not-allowed" : "pointer",
+              fontFamily: "inherit", fontWeight: 600,
+            }}
           >
             Cancel
           </button>
-        </div>
 
-        <div style={{
-          marginTop: 18,
-          paddingTop: 14,
-          borderTop: "1px solid var(--border)",
-          fontSize: 11,
-          color: "var(--text-muted)",
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: "4px 10px",
-        }}>
-          <button type="button" onClick={() => onOpenPolicy("refund")} style={linkBtnStyle}>Refund Policy</button>
-          <span>·</span>
-          <button type="button" onClick={() => onOpenPolicy("privacy")} style={linkBtnStyle}>Privacy Policy</button>
-          <span>·</span>
-          <button type="button" onClick={() => onOpenPolicy("terms")} style={linkBtnStyle}>Terms & Conditions</button>
+          <div style={{
+            marginTop: 18, paddingTop: 14,
+            borderTop: freeOffer ? "1px solid rgba(148,163,184,0.2)" : "1px solid var(--border)",
+            fontSize: 11, color: freeOffer ? "#94a3b8" : "var(--text-muted)",
+            display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px 10px",
+          }}>
+            <button type="button" onClick={() => onOpenPolicy("refund")} style={{ ...linkBtnStyle, color: "inherit" }}>Refund Policy</button>
+            <span>·</span>
+            <button type="button" onClick={() => onOpenPolicy("privacy")} style={{ ...linkBtnStyle, color: "inherit" }}>Privacy Policy</button>
+            <span>·</span>
+            <button type="button" onClick={() => onOpenPolicy("terms")} style={{ ...linkBtnStyle, color: "inherit" }}>Terms & Conditions</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1232,6 +1291,26 @@ useEffect(() => {
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes glassCrack {
+          0% { transform: scale(1); filter: brightness(1); }
+          28% { transform: scale(1.018) rotate(-0.35deg); filter: brightness(1.8); }
+          48% { transform: scale(0.992) rotate(0.25deg); }
+          100% { transform: scale(1) rotate(0); filter: brightness(1); }
+        }
+        @keyframes shardPop {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
+          to { opacity: 0.8; transform: translate(-50%, -50%) scale(1) rotate(18deg); }
+        }
+        .glass-line { position: absolute; left: 50%; top: 45%; width: 190px; height: 1px; transform-origin: left center; background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(125,211,252,0.12)); box-shadow: 0 0 5px rgba(186,230,253,0.65); animation: fadeIn 0.25s ease both; }
+        .glass-line-1 { transform: rotate(12deg); }
+        .glass-line-2 { transform: rotate(54deg); width: 155px; }
+        .glass-line-3 { transform: rotate(108deg); width: 135px; }
+        .glass-line-4 { transform: rotate(166deg); width: 175px; }
+        .glass-line-5 { transform: rotate(228deg); width: 120px; }
+        .glass-shard { position: absolute; left: 50%; top: 45%; width: 0; height: 0; border-left: 24px solid transparent; border-right: 9px solid transparent; border-bottom: 58px solid rgba(186,230,253,0.09); filter: drop-shadow(0 0 3px rgba(125,211,252,0.3)); animation: shardPop 0.45s ease both; }
+        .glass-shard-1 { margin-left: 52px; margin-top: -4px; transform: rotate(28deg); }
+        .glass-shard-2 { margin-left: -75px; margin-top: 32px; transform: rotate(144deg); }
+        .glass-shard-3 { margin-left: 8px; margin-top: -70px; transform: rotate(244deg); }
         /* ── Desktop two-panel ── */
         .cvview-layout {
           display: flex;
@@ -1701,68 +1780,21 @@ useEffect(() => {
       `}</style>
 
 {showPriceModal && (
+  <>
+    {/* PAYMENT DOWNLOAD FLOW TEMPORARILY DISABLED.
+        The existing PayPal/PayHere success handlers that called handleDownload()
+        are intentionally bypassed while the limited free offer is active. */}
   <PriceModal
-    cv={cv}
     price={price}
     processing={exporting}
     onClose={() => !exporting && setShowPriceModal(false)}
     onOpenPolicy={(key) => setActivePolicy(key)}
-    onPaypalSuccess={() => {
+    onFreeDownload={() => {
       setShowPriceModal(false);
       handleDownload();
     }}
-    onPaypalError={(err) => {
-      console.error("PayPal error:", err);
-      setExporting(false);
-    }}
-    onPayhereConfirm={async () => {
-      setExporting(true);
-      try {
-        const orderId = `${cv._id}-${Date.now()}`;
-        const currency = "LKR";
-        const amount = 100;
-
-        const { hash, merchant_id, amount: amountFormatted } = await getPayhereHash(orderId, amount, currency);
-
-        const payment = {
-          sandbox: true,
-          merchant_id,
-          return_url: window.location.origin + window.location.pathname,
-          cancel_url: window.location.origin + window.location.pathname,
-          notify_url: "https://atsfriendlycvbuilder.com/backend/api/payment/payhere/notify",
-          order_id: orderId,
-          items: "CV PDF Download",
-          amount: amountFormatted,
-          currency,
-          hash,
-          first_name: cv?.personalInfo?.fullName?.split(" ")[0] || "Customer",
-          last_name: cv?.personalInfo?.fullName?.split(" ").slice(1).join(" ") || "User",
-          email: cv?.personalInfo?.email || "test@example.com",
-          phone: cv?.personalInfo?.phones?.[0] || "0771234567",
-          address: cv?.personalInfo?.address || "N/A",
-          city: "Colombo",
-          country: "Sri Lanka",
-        };
-
-        window.payhere.onCompleted = function () {
-          setShowPriceModal(false);
-          handleDownload();
-        };
-        window.payhere.onDismissed = function () {
-          setExporting(false);
-        };
-        window.payhere.onError = function (error) {
-          console.error("Payment error:", error);
-          setExporting(false);
-        };
-
-        window.payhere.startPayment(payment);
-      } catch (err) {
-        console.error(err);
-        setExporting(false);
-      }
-    }}
   />
+  </>
 )}
 
 {activePolicy && (
