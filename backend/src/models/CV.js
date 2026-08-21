@@ -14,6 +14,11 @@ const educationSchema = new mongoose.Schema(
     program:       { type: String, trim: true },
     description:   { type: String, trim: true },
     gpa:           { type: String, trim: true },
+    startMonth:    { type: String },
+    startYear:     { type: String },
+    endMonth:      { type: String },
+    endYear:       { type: String },
+    isCurrent:     { type: Boolean, default: false },
     subjects:      [subjectSchema],
   },
   { _id: false }
