@@ -1,10 +1,11 @@
 // src/pages/Projects.jsx
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveProjects,suggestProjectDescription } from "../api";
 import { useAiLimit } from "../hooks/useAiLimit";
 import AiLimitPopup from "../componenets/AiLimitPopup";
+import { useCVField } from "../context/CVContext"
 
 const STEPS = [
   { label: "Personal" },
@@ -510,7 +511,10 @@ function ProjectCard({ entry, index, onUpdate, onRemove, aiLimit }) {
 
 function Projects() {
   const navigate = useNavigate();
-  const [entries, setEntries] = useState([newEntry()]);
+  const [entries, setEntries] = useCVField("projects", "entries");
+useEffect(() => {
+  if (entries.length === 0) setEntries([newEntry()]);
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const cvId = getCVId();

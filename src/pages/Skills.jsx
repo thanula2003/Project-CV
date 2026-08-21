@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getCVId, getSkillSuggestions, saveSkills } from "../api";
 import { useAiLimit } from "../hooks/useAiLimit";
 import AiLimitPopup from "../componenets/AiLimitPopup";
+import { useCVField } from "../context/CVContext";
 
 const STEPS = [
   { label: "Personal" },
@@ -92,7 +93,7 @@ function SparkleIcon() {
 
 function Skills() {
   const navigate = useNavigate();
-  const [skills, setSkills] = useState([]);
+  const [skills, setSkills] = useCVField("skills", "skills");
   const [inputVal, setInputVal] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(new Set());

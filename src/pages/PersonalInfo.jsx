@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, savePersonal, savePhoto } from "../api";
+import { useCVField } from "../context/CVContext";
 
 const STEPS = [
   { label: "Personal" },
@@ -158,16 +159,9 @@ function PersonalInfo() {
     setShowATSModal(false);
   };
 
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    dateOfBirth: "",
-    address: "",
-    linkedIn: "",
-    github: "",
-  });
-  const [phones, setPhones] = useState([""]);
-  const [photo, setPhoto] = useState("");
+  const [form, setForm] = useCVField("personalInfo", "form");
+  const [phones, setPhones] = useCVField("personalInfo", "phones");
+  const [photo, setPhoto] = useCVField("personalInfo", "photo");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 

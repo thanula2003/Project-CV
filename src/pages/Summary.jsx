@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getCVId, saveSummary, generateSummary } from "../api";
 import { useAiLimit } from "../hooks/useAiLimit";
 import AiLimitPopup from "../componenets/AiLimitPopup";
+import { useCVField } from "../context/CVContext"
 
 const STEPS = [
   { label: "Personal" },
@@ -53,12 +54,12 @@ function SparkleIcon() {
 
 function Summary() {
   const navigate = useNavigate();
-  const [summary, setSummary] = useState("");
+  const [summary, setSummary] = useCVField("summary", "summary");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [generated, setGenerated] = useState(false);
-  const [charCount, setCharCount] = useState(0);
+  const [charCount, setCharCount] = useState(summary.length);
   const cvId = getCVId();
   const aiLimit = useAiLimit(cvId, "summary", 5);
 

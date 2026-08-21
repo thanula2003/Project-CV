@@ -1,11 +1,11 @@
 //Education.jsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveEducation, suggestDescription} from "../api";
 import { useAiLimit } from "../hooks/useAiLimit";
 import AiLimitPopup from "../componenets/AiLimitPopup";
-
+import { useCVField } from "../context/CVContext";
 
 const STEPS = [
   { label: "Personal" },
@@ -548,7 +548,10 @@ function InstituteCard({ inst, index, onUpdate, onRemove, aiLimit }) {
 
 function Education() {
   const navigate = useNavigate();
-  const [institutes, setInstitutes] = useState([newInstitute()]);
+  const [institutes, setInstitutes] = useCVField("education", "institutes");
+  useEffect(() => {
+    if (institutes.length === 0) setInstitutes([newInstitute()]);
+  }, []); 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const cvId = getCVId();

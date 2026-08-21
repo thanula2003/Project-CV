@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCV, getRecentReviews } from "../api";
+import { useCV } from "../context/CVContext";
 
 const ATS_FEATURES = [
   { label: "ATS-Parseable Format" },
@@ -366,11 +367,13 @@ function Home() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { resetCV } = useCV();   
 
   const handleStart = async () => {
     setLoading(true);
     setError("");
     try {
+      resetCV();          // ← clear any leftover data from a previous CV session
       await createCV();
       navigate("/personal-info");
     } catch {

@@ -1,10 +1,11 @@
 // src/pages/Experience.jsx
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveExperience,suggestResponsibilities } from "../api";
 import { useAiLimit } from "../hooks/useAiLimit";
 import AiLimitPopup from "../componenets/AiLimitPopup";
+import { useCVField } from "../context/CVContext";
 
 const STEPS = [
   { label: "Personal" },
@@ -439,7 +440,11 @@ function ExperienceCard({ entry, index, onUpdate, onRemove, aiLimit }) {
 
 function Experience() {
   const navigate = useNavigate();
-  const [entries, setEntries] = useState([newEntry()]);
+  const [entries, setEntries] = useCVField("experience", "entries");
+
+useEffect(() => {
+  if (entries.length === 0) setEntries([newEntry()]);
+}, []); 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const cvId = getCVId();

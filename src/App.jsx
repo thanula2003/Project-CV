@@ -1,6 +1,5 @@
-// src/App.jsx
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { CVProvider } from "./context/CVContext";
 import Home            from "./pages/Home";
 import PersonalInfo    from "./pages/PersonalInfo";
 import Education       from "./pages/Education";
@@ -14,20 +13,22 @@ import CVView          from "./pages/CVView";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/"                 element={<Home />} />
-        <Route path="/personal-info"    element={<PersonalInfo />} />
-        <Route path="/education"        element={<Education />} />
-        <Route path="/experience"       element={<Experience />} />
-        <Route path="/projects-prompt"  element={<ProjectsPrompt />} />
-        <Route path="/projects"         element={<Projects />} />
-        <Route path="/skills"           element={<Skills />} />
-        <Route path="/summary"          element={<Summary />} />
-        <Route path="/template-select"  element={<TemplateSelect />} />
-        <Route path="/view"             element={<CVView />} />
-      </Routes>
-    </Router>
+    <CVProvider>
+      <Router>
+        <Routes>
+          <Route path="/"                 element={<Home />} />
+          <Route path="/personal-info"    element={<PersonalInfo />} />
+          <Route path="/education"        element={<Education />} />
+          <Route path="/experience"       element={<Experience />} />
+          <Route path="/projects-prompt"  element={<ProjectsPrompt />} />
+          <Route path="/projects"         element={<Projects />} />
+          <Route path="/skills"           element={<Skills />} />
+          <Route path="/summary"          element={<Summary />} />
+          <Route path="/template-select"  element={<TemplateSelect />} />
+          <Route path="/view"             element={<CVView />} />
+        </Routes>
+      </Router>
+    </CVProvider>
   );
 }
 
