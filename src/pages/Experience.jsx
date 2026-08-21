@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveExperience,suggestResponsibilities } from "../api";
+import { useAiLimit } from "../hooks/useAiLimit";
+import AiLimitPopup from "../componenets/AiLimitPopup";
 
 const STEPS = [
   { label: "Personal" },
@@ -107,7 +109,7 @@ function formatDateRange(entry) {
   return start || end || null;
 }
 
-function ExperienceCard({ entry, index, onUpdate, onRemove }) {
+function ExperienceCard({ entry, index, onUpdate, onRemove, aiLimit }) {
   const toggleOpen = () => onUpdate({ ...entry, open: !entry.open });
   const set = (key, val) => onUpdate({ ...entry, [key]: val });
 
@@ -395,6 +397,7 @@ function ExperienceCard({ entry, index, onUpdate, onRemove }) {
     disabled={!entry.company || !entry.position || entry.suggesting}
     loading={entry.suggesting}
     onClick={async () => {
+      if (!aiLimit.consume()) return;
       const id = getCVId();
       if (!id) return;
       onUpdate({ ...entry, suggesting: true });
@@ -439,6 +442,8 @@ function Experience() {
   const [entries, setEntries] = useState([newEntry()]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const cvId = getCVId();
+  const aiLimit = useAiLimit(cvId, "experience", 10);
 
   const addEntry    = () => setEntries([...entries, newEntry()]);
   const updateEntry = (id, updated) => setEntries(entries.map((e) => (e.id === id ? updated : e)));
@@ -477,6 +482,7 @@ function Experience() {
             index={i}
             onUpdate={(updated) => updateEntry(entry.id, updated)}
             onRemove={() => removeEntry(entry.id)}
+            aiLimit={aiLimit}
           />
         ))}
 
@@ -517,6 +523,13 @@ function Experience() {
           </button>
         </div>
       </div>
+
+      {aiLimit.showLimitPopup && (
+        <AiLimitPopup
+          onClose={aiLimit.closePopup}
+          message="You've used all 10 free AI suggestions for Work Experience. You can still write your own — it only takes a minute!"
+        />
+      )}
     </div>
   );
 }

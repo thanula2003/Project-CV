@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, getSkillSuggestions, saveSkills } from "../api";
+import { useAiLimit } from "../hooks/useAiLimit";
+import AiLimitPopup from "../componenets/AiLimitPopup";
 
 const STEPS = [
   { label: "Personal" },
@@ -98,6 +100,8 @@ function Skills() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef();
+  const cvId = getCVId();
+  const aiLimit = useAiLimit(cvId, "skills", 7);
 
   const addSkill = () => {
     const trimmed = inputVal.trim();
@@ -114,6 +118,7 @@ function Skills() {
   const removeSkill = (s) => setSkills(skills.filter((x) => x !== s));
 
   const fetchSuggestions = async () => {
+    if (!aiLimit.consume()) return;
     const id = getCVId();
     if (!id) { setError("No CV session found."); return; }
     setLoadingSuggestions(true);
@@ -346,6 +351,13 @@ function Skills() {
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {aiLimit.showLimitPopup && (
+        <AiLimitPopup
+          onClose={aiLimit.closePopup}
+          message="You've used all 3 free AI skill suggestions. Feel free to add the rest of your skills manually!"
+        />
+      )}
     </div>
   );
 }

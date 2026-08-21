@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveEducation, suggestDescription} from "../api";
+import { useAiLimit } from "../hooks/useAiLimit";
+import AiLimitPopup from "../componenets/AiLimitPopup";
 
 
 const STEPS = [
@@ -116,7 +118,7 @@ function newSubject() {
   return { id: Date.now() + Math.random(), name: "", grade: "" };
 }
 
-function InstituteCard({ inst, index, onUpdate, onRemove }) {
+function InstituteCard({ inst, index, onUpdate, onRemove, aiLimit }) {
   const toggleOpen = () => onUpdate({ ...inst, open: !inst.open });
   const set = (key, val) => onUpdate({ ...inst, [key]: val });
   const addSubject = () => onUpdate({ ...inst, subjects: [...inst.subjects, newSubject()] });
@@ -390,6 +392,7 @@ function InstituteCard({ inst, index, onUpdate, onRemove }) {
                   disabled={!inst.institute || !inst.qualification || !inst.program || inst.suggesting}
                   loading={inst.suggesting}
                   onClick={async () => {
+                    if (!aiLimit.consume()) return;
                     const id = getCVId();
                     if (!id) return;
                     onUpdate({ ...inst, suggesting: true });
@@ -548,6 +551,8 @@ function Education() {
   const [institutes, setInstitutes] = useState([newInstitute()]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const cvId = getCVId();
+  const aiLimit = useAiLimit(cvId, "education", 10);
 
   const addInstitute = () => setInstitutes([...institutes, newInstitute()]);
   const updateInstitute = (id, updated) => setInstitutes(institutes.map((inst) => (inst.id === id ? updated : inst)));
@@ -589,6 +594,7 @@ function Education() {
             index={i}
             onUpdate={(updated) => updateInstitute(inst.id, updated)}
             onRemove={() => removeInstitute(inst.id)}
+            aiLimit={aiLimit}
           />
         ))}
 
@@ -634,6 +640,13 @@ function Education() {
           </button>
         </div>
       </div>
+
+      {aiLimit.showLimitPopup && (
+        <AiLimitPopup
+          onClose={aiLimit.closePopup}
+          message="You've used all 10 free AI description suggestions for Education. You can still write your own — it only takes a minute!"
+        />
+      )}
     </div>
   );
 }

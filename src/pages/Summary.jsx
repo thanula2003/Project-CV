@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCVId, saveSummary, generateSummary } from "../api";
+import { useAiLimit } from "../hooks/useAiLimit";
+import AiLimitPopup from "../componenets/AiLimitPopup";
 
 const STEPS = [
   { label: "Personal" },
@@ -57,10 +59,13 @@ function Summary() {
   const [error, setError] = useState("");
   const [generated, setGenerated] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const cvId = getCVId();
+  const aiLimit = useAiLimit(cvId, "summary", 5);
 
   const MAX_CHARS = 1000;
 
   const handleGenerate = async () => {
+    if (!aiLimit.consume()) return;
     const id = getCVId();
     if (!id) { setError("Session not found. Please start from the beginning."); return; }
     setGenerating(true);
@@ -256,6 +261,13 @@ function Summary() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {aiLimit.showLimitPopup && (
+        <AiLimitPopup
+          onClose={aiLimit.closePopup}
+          message="You've used all 5 free AI-generated summaries. You can still tweak the last one or write your own!"
+        />
+      )}
     </div>
   );
 }
